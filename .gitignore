@@ -30,3 +30,7 @@ yarn-error.log*
 .idea/
 .DS_Store
 Thumbs.db
+
+# Local project notes
+catatan.txt
+history.md
