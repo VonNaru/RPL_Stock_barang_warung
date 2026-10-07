@@ -24,6 +24,7 @@ Fokus utama dari proyek ini adalah memberikan visibilitas penuh kepada *owner* t
 - **Dashboard & Low-Stock Alerts:** Halaman beranda yang memberikan ringkasan visual data inventaris. Dilengkapi *widget* indikator yang secara otomatis memunculkan daftar barang yang stoknya berada di bawah ambang batas aman.
 - **Manajemen Master Barang (Katalog):** Modul sentral untuk mengelola daftar barang. Pengguna dapat menambah item baru, mengubah nama, kategori, serta mengatur angka mutlak untuk "stok minimum" dari tiap-tiap barang.
 - **Modul Transaksi In/Out:** Fasilitas input untuk mencatat penambahan stok (saat restok dari agen) dan pengurangan stok (saat barang laku, kedaluwarsa, atau cacat) yang otomatis meng-*update* total stok.
+- **Manajemen Pesanan Pelanggan:** Fasilitas untuk mencatat pesanan berdasarkan nama pelanggan, barang, jumlah, dan catatan. Sistem menentukan status awal pesanan berdasarkan ketersediaan stok, serta menyediakan aksi untuk menyelesaikan atau membatalkan pesanan.
 - **Laporan Riwayat Transaksi:** Tabel log yang merekam seluruh jejak aktivitas keluar-masuknya barang secara kronologis beserta keterangan waktu untuk keperluan pencocokan data (*stock opname*).
 
 ## Cara Menjalankan Aplikasi
@@ -121,7 +122,7 @@ npm install -D vite @vitejs/plugin-react tailwindcss postcss autoprefixer
 3. Salin `apps/api/.env.example` menjadi `apps/api/.env`.
 4. Isi `SUPABASE_URL` dan `SUPABASE_SERVICE_ROLE_KEY` dari menu **Project Settings > API**. Service role key hanya digunakan backend dan jangan dimasukkan ke frontend.
 
-Query membuat tabel `tabel_barang`, `tabel_transaksi`, constraint foreign key, serta function `catat_transaksi_stok`. Function tersebut mengunci update stok secara aman dan menolak transaksi keluar jika stok tidak mencukupi.
+Query membuat tabel `tabel_barang`, `tabel_transaksi`, dan `tabel_pesanan`, constraint foreign key, serta function `catat_transaksi_stok`. Function tersebut mengunci update stok secara aman dan menolak transaksi keluar jika stok tidak mencukupi. Tabel pesanan menyimpan status `Menunggu Stok`, `Siap Diambil`, `Selesai`, atau `Dibatalkan`.
 
 ### 3. Menjalankan aplikasi
 
@@ -154,6 +155,11 @@ VITE_API_URL=http://localhost:3000/api
 | PUT | `/api/barang/:id` | Mengubah barang dan batas minimum |
 | GET | `/api/transaksi` | Mengambil riwayat transaksi |
 | POST | `/api/transaksi` | Mencatat transaksi `masuk` atau `keluar` |
+| GET | `/api/pesanan` | Mengambil seluruh pesanan |
+| GET | `/api/pesanan/menunggu-stok` | Mengambil pesanan yang masih menunggu stok |
+| POST | `/api/pesanan` | Mencatat pesanan pelanggan |
+| POST | `/api/pesanan/:id/selesaikan` | Menyelesaikan pesanan dan mengurangi stok |
+| POST | `/api/pesanan/:id/batalkan` | Membatalkan pesanan |
 
 Contoh body untuk transaksi:
 
@@ -170,6 +176,7 @@ Contoh body untuk transaksi:
 - **Ringkasan:** widget peringatan stok rendah dari `/api/barang/low-stock` dan statistik inventaris.
 - **Master Barang:** tabel barang serta modal tambah/edit nama, stok, dan stok minimum.
 - **Transaksi In / Out:** dropdown barang, jenis transaksi, dan jumlah.
+- **Pesanan:** mencatat pesanan pelanggan, melihat status ketersediaan pesanan, menyelesaikan pesanan ketika stok tersedia, dan membatalkan pesanan.
 - **Riwayat Transaksi:** daftar transaksi dari yang terbaru dengan nama barang, jenis, jumlah, dan waktu.
 
 ### Perintah pemeriksaan
