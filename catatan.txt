@@ -1,0 +1,109 @@
+CATATAN FITUR DAN TEKNOLOGI WEB
+Sistem Informasi Manajemen Stok Warung
+
+1. FITUR UTAMA
+
+- Dashboard / Ringkasan
+  Menampilkan jumlah total barang, jumlah transaksi masuk, jumlah transaksi keluar,
+  dan daftar barang yang stoknya sudah menyentuh batas minimum.
+
+- Master Barang
+  Menampilkan katalog barang dalam bentuk tabel.
+  Bisa menambah barang baru.
+  Bisa mengubah nama barang, stok saat ini, dan stok minimum.
+  Menampilkan status stok: Aman atau Stok rendah.
+
+- Transaksi In / Out
+  Mencatat barang masuk saat restok.
+  Mencatat barang keluar saat barang terjual, rusak, atau berkurang.
+  Jumlah stok diperbarui oleh backend setelah transaksi berhasil.
+  Transaksi keluar ditolak jika stok tidak mencukupi.
+
+- Fitur Pesanan (Pre-Order / Booking)
+  Mencatat pesanan dari pelanggan untuk barang tertentu.
+  Status pesanan otomatis ditentukan: 'Siap Diambil' jika stok cukup, atau 'Menunggu Stok' jika stok belum mencukupi.
+  Menyediakan aksi selesaikan pesanan (otomatis memotong stok via transaksi keluar) atau batalkan pesanan.
+
+- Riwayat Transaksi
+  Menampilkan waktu transaksi, nama barang, jenis transaksi, dan jumlah.
+  Jenis transaksi terdiri dari Masuk dan Keluar.
+
+- Peringatan Stok Minimum
+  Barang yang stoknya sama dengan atau di bawah stok minimum ditampilkan sebagai
+  barang yang perlu diperhatikan.
+
+- Navigasi Satu Aplikasi
+  Dashboard, Master Barang, Transaksi, Pesanan, dan Riwayat berada dalam satu web app.
+  Perpindahan menu dilakukan melalui sidebar tanpa membuka aplikasi terpisah.
+
+- Notifikasi dan Loading
+  Menampilkan pesan berhasil atau gagal setelah aksi.
+  Tombol segarkan menampilkan indikator loading saat data dimuat.
+  Sidebar dapat dibuka melalui menu mobile.
+
+2. TEKNOLOGI YANG DIPAKAI
+
+Frontend:
+- React 19
+- Vite
+- Tailwind CSS
+- Lucide React untuk ikon
+- JavaScript JSX
+
+Backend:
+- Node.js
+- Express
+- CORS
+- dotenv
+- Supabase JavaScript Client
+
+Database:
+- Supabase PostgreSQL
+- Tabel tabel_barang
+- Tabel tabel_transaksi
+- Tabel tabel_pesanan
+- Function catat_transaksi_stok untuk memproses transaksi dan memperbarui stok
+
+Struktur aplikasi:
+- apps/web: frontend React
+- apps/api: backend Express
+- supabase.sql: struktur tabel, relasi, dan function database
+
+3. ENDPOINT API YANG DIPAKAI
+
+GET    /api/barang
+GET    /api/barang/low-stock
+POST   /api/barang
+PUT    /api/barang/:id
+GET    /api/transaksi
+POST   /api/transaksi
+GET    /api/pesanan
+GET    /api/pesanan/menunggu-stok
+POST   /api/pesanan
+POST   /api/pesanan/:id/selesaikan
+POST   /api/pesanan/:id/batalkan
+GET    /api/health
+
+4. CATATAN PENGEMBANGAN
+
+- Kategori barang belum tersedia di form dan database yang sedang dipakai.
+- Login atau autentikasi pengguna belum tersedia.
+- Belum ada fitur hapus barang.
+- Belum ada export laporan ke Excel atau PDF.
+- Belum ada grafik penjualan atau laporan keuntungan.
+- Backend membutuhkan file apps/api/.env agar koneksi Supabase berjalan.
+- Frontend memakai VITE_API_URL jika API tidak berjalan di alamat default.
+
+5. PERINTAH PENTING
+
+Install dependency:
+npm install
+
+Jalankan frontend dan backend:
+npm run dev
+
+Build frontend:
+npm run build
+
+Build frontend workspace:
+npm run build --workspace apps/web

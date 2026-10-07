@@ -36,3 +36,17 @@ begin
   return transaksi;
 end;
 $$;
+
+create table if not exists public.tabel_pesanan (
+  id_pesanan uuid primary key default gen_random_uuid(),
+  nama_pelanggan text not null,
+  id_barang uuid not null references public.tabel_barang(id_barang) on delete cascade,
+  jumlah_pesanan integer not null check (jumlah_pesanan > 0),
+  status_pesanan text not null default 'Menunggu Stok' check (status_pesanan in ('Menunggu Stok', 'Siap Diambil', 'Selesai', 'Dibatalkan')),
+  catatan text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_tabel_pesanan_status_pesanan on public.tabel_pesanan(status_pesanan);
+create index if not exists idx_tabel_pesanan_id_barang on public.tabel_pesanan(id_barang);
