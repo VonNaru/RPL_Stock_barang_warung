@@ -51,6 +51,22 @@ Catatan ini berisi pembaruan penting pada aplikasi Sistem Informasi Manajemen St
 
 ---
 
+## 2026-10-15
+
+### Penyempurnaan MVP & Arsitektur Service Layer
+
+- **Penyempurnaan Service Layer Backend (`apps/api/services`)**:
+  - `barangService.js`: Modul aturan bisnis untuk validasi input master barang, penentuan status stok ('Aman' vs 'Stok rendah'), filter barang kritis (low-stock), dan kalkulasi ringkasan dashboard.
+  - `transaksiService.js`: Modul aturan bisnis untuk validasi transaksi masuk dan keluar, serta kalkulasi mutasi stok dengan proteksi error `STOK_TIDAK_CUKUP`.
+  - `pesananService.js`: Modul aturan bisnis untuk validasi pesanan, penentuan status awal ('Siap Diambil' vs 'Menunggu Stok'), serta aturan kelayakan penyelesaian dan pembatalan pesanan.
+- **Refaktor Controller API (`apps/api/routes`)**:
+  - `barang.js`, `transaksi.js`, dan `pesanan.js` mengadopsi modul service untuk memastikan konsistensi aturan bisnis dan modularitas kode produksi.
+- **Pengujian**:
+  - Seluruh file service dan route lulus syntax check `node --check`.
+  - Frontend berhasil di-build tanpa error (`npm run build`).
+
+---
+
 ## Catatan Pembaruan Berikutnya
 
 Gunakan bagian ini untuk menambahkan perubahan baru. Format yang disarankan:

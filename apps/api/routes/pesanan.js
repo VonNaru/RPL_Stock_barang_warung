@@ -1,5 +1,11 @@
 import { Router } from 'express';
 import { supabase } from '../supabase.js';
+import {
+  canCancelOrder,
+  canCompleteOrder,
+  determineInitialOrderStatus,
+  validatePesananInput
+} from '../services/pesananService.js';
 
 const router = Router();
 
@@ -28,35 +34,48 @@ router.get('/menunggu-stok', async (_req, res, next) => {
 
 router.post('/', async (req, res, next) => {
   try {
-    const namaPelanggan = req.body.NamaPelanggan || req.body.nama_pelanggan || req.body.namaPelanggan;
-    const idBarang = req.body.IdBarang || req.body.id_barang || req.body.idBarang;
+    const namaPelanggan = req.body.NamaPelanggan ?? req.body.nama_pelanggan ?? req.body.namaPelanggan;
+    const idBarang = req.body.IdBarang ?? req.body.id_barang ?? req.body.idBarang;
     const jumlahPesanan = req.body.JumlahPesanan ?? req.body.jumlah_pesanan ?? req.body.jumlahPesanan;
     const catatan = req.body.Catatan ?? req.body.catatan ?? null;
 
-    if (!namaPelanggan?.trim() || !idBarang || !Number.isInteger(jumlahPesanan) || jumlahPesanan <= 0) {
-      return res.status(400).json({ message: 'Nama pelanggan, barang, dan jumlah pesanan positif wajib diisi.' });
+    const validation = validatePesananInput({
+      nama_pelanggan: namaPelanggan,
+      id_barang: idBarang,
+      jumlah_pesanan: jumlahPesanan,
+      catatan
+    });
+
+    if (!validation.isValid) {
+      return res.status(400).json({
+        message: 'Nama pelanggan, barang, dan jumlah pesanan positif wajib diisi.',
+        errors: validation.errors
+      });
     }
 
     const { data: barang, error: barangError } = await supabase
       .from('tabel_barang')
       .select('stok_saat_ini')
-      .eq('id_barang', idBarang)
+      .eq('id_barang', validation.sanitized.id_barang)
       .single();
 
     if (barangError || !barang) {
       return res.status(404).json({ message: 'Barang tidak ditemukan.' });
     }
 
-    const statusPesanan = barang.stok_saat_ini >= jumlahPesanan ? 'Siap Diambil' : 'Menunggu Stok';
+    const statusPesanan = determineInitialOrderStatus({
+      currentStock: barang.stok_saat_ini,
+      jumlah_pesanan: validation.sanitized.jumlah_pesanan
+    });
 
     const { data, error } = await supabase
       .from('tabel_pesanan')
       .insert({
-        nama_pelanggan: namaPelanggan.trim(),
-        id_barang: idBarang,
-        jumlah_pesanan: jumlahPesanan,
+        nama_pelanggan: validation.sanitized.nama_pelanggan,
+        id_barang: validation.sanitized.id_barang,
+        jumlah_pesanan: validation.sanitized.jumlah_pesanan,
         status_pesanan: statusPesanan,
-        catatan: catatan?.trim() || null
+        catatan: validation.sanitized.catatan
       })
       .select('*, tabel_barang(nama_barang, stok_saat_ini)')
       .single();
@@ -79,10 +98,6 @@ router.post('/:Id/selesaikan', async (req, res, next) => {
       return res.status(404).json({ message: 'Pesanan tidak ditemukan.' });
     }
 
-    if (['Selesai', 'Dibatalkan'].includes(pesanan.status_pesanan)) {
-      return res.status(400).json({ message: 'Pesanan yang sudah selesai atau dibatalkan tidak dapat diubah.' });
-    }
-
     const { data: barang, error: barangError } = await supabase
       .from('tabel_barang')
       .select('stok_saat_ini')
@@ -93,8 +108,9 @@ router.post('/:Id/selesaikan', async (req, res, next) => {
       return res.status(404).json({ message: 'Barang tidak ditemukan.' });
     }
 
-    if (barang.stok_saat_ini < pesanan.jumlah_pesanan) {
-      return res.status(400).json({ message: 'Stok tidak mencukupi untuk menyelesaikan pesanan ini.' });
+    const check = canCompleteOrder(pesanan, barang.stok_saat_ini);
+    if (!check.canComplete) {
+      return res.status(400).json({ message: check.reason });
     }
 
     const { error: rpcError } = await supabase.rpc('catat_transaksi_stok', {
@@ -130,8 +146,9 @@ router.post('/:Id/batalkan', async (req, res, next) => {
       return res.status(404).json({ message: 'Pesanan tidak ditemukan.' });
     }
 
-    if (['Selesai', 'Dibatalkan'].includes(pesanan.status_pesanan)) {
-      return res.status(400).json({ message: 'Pesanan yang sudah selesai atau dibatalkan tidak dapat diubah.' });
+    const check = canCancelOrder(pesanan);
+    if (!check.canCancel) {
+      return res.status(400).json({ message: check.reason });
     }
 
     const { data, error } = await supabase
