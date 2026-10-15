@@ -1,10 +1,12 @@
 {
   "name": "sistem-manajemen-stok-warung",
   "private": true,
+  "type": "module",
   "workspaces": ["apps/api", "apps/web"],
   "scripts": {
     "dev": "concurrently \"npm run dev --workspace apps/api\" \"npm run dev --workspace apps/web\"",
-    "build": "npm run build --workspace apps/web"
+    "build": "npm run build --workspace apps/web",
+    "test": "node --test tests/**/*.test.js"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
