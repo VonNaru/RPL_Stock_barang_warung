@@ -1,27 +1,27 @@
-import { useEffect, useState } from 'react';
-import { Package, RefreshCw } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { Package, RefreshCw } from "lucide-react";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 export default function PesananPage({ barang = [], onRefresh, notify }) {
   const [pesananList, setPesananList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
-    nama_pelanggan: '',
-    id_barang: '',
+    nama_pelanggan: "",
+    id_barang: "",
     jumlah_pesanan: 1,
-    catatan: ''
+    catatan: "",
   });
 
   const fetchPesanan = async () => {
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/pesanan`);
-      if (!res.ok) throw new Error('Gagal mengambil data pesanan.');
+      if (!res.ok) throw new Error("Gagal mengambil data pesanan.");
       const data = await res.json();
       setPesananList(data);
     } catch (err) {
-      notify?.('error', err.message);
+      notify?.("error", err.message);
     } finally {
       setLoading(false);
     }
@@ -40,66 +40,79 @@ export default function PesananPage({ barang = [], onRefresh, notify }) {
     e.preventDefault();
     try {
       const res = await fetch(`${API_URL}/pesanan`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           NamaPelanggan: form.nama_pelanggan,
           IdBarang: form.id_barang,
           JumlahPesanan: Number(form.jumlah_pesanan),
-          Catatan: form.catatan
-        })
+          Catatan: form.catatan,
+        }),
       });
       const result = await res.json();
-      if (!res.ok) throw new Error(result.message || 'Gagal mencatat pesanan.');
-      notify?.('success', result.message || 'Pesanan berhasil dicatat.');
-      setForm({ nama_pelanggan: '', id_barang: barang[0]?.id_barang || '', jumlah_pesanan: 1, catatan: '' });
+      if (!res.ok) throw new Error(result.message || "Gagal mencatat pesanan.");
+      notify?.("success", result.message || "Pesanan berhasil dicatat.");
+      setForm({
+        nama_pelanggan: "",
+        id_barang: barang[0]?.id_barang || "",
+        jumlah_pesanan: 1,
+        catatan: "",
+      });
       fetchPesanan();
       if (onRefresh) onRefresh();
     } catch (err) {
-      notify?.('error', err.message);
+      notify?.("error", err.message);
     }
   };
 
   const handleSelesaikan = async (id) => {
-    if (!window.confirm('Apakah Anda yakin ingin menyelesaikan pesanan ini?')) return;
+    if (!window.confirm("Apakah Anda yakin ingin menyelesaikan pesanan ini?"))
+      return;
     try {
-      const res = await fetch(`${API_URL}/pesanan/${id}/selesaikan`, { method: 'POST' });
+      const res = await fetch(`${API_URL}/pesanan/${id}/selesaikan`, {
+        method: "POST",
+      });
       const result = await res.json();
-      if (!res.ok) throw new Error(result.message || 'Gagal menyelesaikan pesanan.');
-      notify?.('success', result.message || 'Pesanan berhasil diselesaikan.');
+      if (!res.ok)
+        throw new Error(result.message || "Gagal menyelesaikan pesanan.");
+      notify?.("success", result.message || "Pesanan berhasil diselesaikan.");
       fetchPesanan();
       if (onRefresh) onRefresh();
     } catch (err) {
-      notify?.('error', err.message);
+      notify?.("error", err.message);
     }
   };
 
   const handleBatalkan = async (id) => {
-    if (!window.confirm('Apakah Anda yakin ingin membatalkan pesanan ini?')) return;
+    if (!window.confirm("Apakah Anda yakin ingin membatalkan pesanan ini?"))
+      return;
     try {
-      const res = await fetch(`${API_URL}/pesanan/${id}/batalkan`, { method: 'POST' });
+      const res = await fetch(`${API_URL}/pesanan/${id}/batalkan`, {
+        method: "POST",
+      });
       const result = await res.json();
-      if (!res.ok) throw new Error(result.message || 'Gagal membatalkan pesanan.');
-      notify?.('success', result.message || 'Pesanan berhasil dibatalkan.');
+      if (!res.ok)
+        throw new Error(result.message || "Gagal membatalkan pesanan.");
+      notify?.("success", result.message || "Pesanan berhasil dibatalkan.");
       fetchPesanan();
       if (onRefresh) onRefresh();
     } catch (err) {
-      notify?.('error', err.message);
+      notify?.("error", err.message);
     }
   };
 
   const getStatusBadgeClass = (status) => {
     switch (status) {
-      case 'Menunggu Stok':
-        return 'bg-amber-100 text-amber-800';
-      case 'Siap Diambil':
-        return 'bg-blue-100 text-blue-800';
-      case 'Selesai':
-        return 'bg-emerald-100 text-emerald-800';
-      case 'Dibatalkan':
-        return 'bg-slate-100 text-slate-600';
+      case "Menunggu Stok":
+        return "bg-amber-100 text-amber-800";
+      case "Siap Diambil":
+        return "bg-blue-100 text-blue-800";
+      case "Selesai":
+        return "bg-emerald-100 text-emerald-800";
+      case "Dibatalkan":
+        return "bg-slate-100 text-slate-600";
       default:
-        return 'bg-slate-100 text-slate-700';
+        return "bg-slate-100 text-slate-700";
     }
   };
 
@@ -117,11 +130,15 @@ export default function PesananPage({ barang = [], onRefresh, notify }) {
           onClick={handleRefreshAll}
           className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 shadow-sm"
         >
-          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} /> Segarkan
+          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />{" "}
+          Segarkan
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="mb-8 rounded-2xl border border-[#e1e8e1] bg-white p-6 shadow-sm md:p-8">
+      <form
+        onSubmit={handleSubmit}
+        className="mb-8 rounded-2xl border border-[#e1e8e1] bg-white p-6 shadow-sm md:p-8"
+      >
         <h3 className="text-lg font-bold text-slate-800 mb-4">Form Pesanan</h3>
         <div className="grid gap-5 sm:grid-cols-2">
           <label className="block text-sm font-semibold text-slate-700">
@@ -130,7 +147,9 @@ export default function PesananPage({ barang = [], onRefresh, notify }) {
               type="text"
               required
               value={form.nama_pelanggan}
-              onChange={(e) => setForm({ ...form, nama_pelanggan: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, nama_pelanggan: e.target.value })
+              }
               placeholder="Nama pelanggan..."
               className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-emerald-600 focus:outline-none"
             />
@@ -160,7 +179,9 @@ export default function PesananPage({ barang = [], onRefresh, notify }) {
               required
               min="1"
               value={form.jumlah_pesanan}
-              onChange={(e) => setForm({ ...form, jumlah_pesanan: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, jumlah_pesanan: e.target.value })
+              }
               className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-emerald-600 focus:outline-none"
             />
           </label>
@@ -199,18 +220,30 @@ export default function PesananPage({ barang = [], onRefresh, notify }) {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {pesananList.map((pesanan) => {
-              const isFinished = pesanan.status_pesanan === 'Selesai' || pesanan.status_pesanan === 'Dibatalkan';
+              const isFinished =
+                pesanan.status_pesanan === "Selesai" ||
+                pesanan.status_pesanan === "Dibatalkan";
               return (
                 <tr key={pesanan.id_pesanan}>
-                  <td className="px-5 py-4 font-semibold text-slate-800">{pesanan.nama_pelanggan}</td>
-                  <td className="px-5 py-4 font-semibold">{pesanan.tabel_barang?.nama_barang || 'Barang dihapus'}</td>
-                  <td className="px-5 py-4 font-bold">{pesanan.jumlah_pesanan}</td>
+                  <td className="px-5 py-4 font-semibold text-slate-800">
+                    {pesanan.nama_pelanggan}
+                  </td>
+                  <td className="px-5 py-4 font-semibold">
+                    {pesanan.tabel_barang?.nama_barang || "Barang dihapus"}
+                  </td>
+                  <td className="px-5 py-4 font-bold">
+                    {pesanan.jumlah_pesanan}
+                  </td>
                   <td className="px-5 py-4">
-                    <span className={`rounded-full px-3 py-1 text-xs font-bold ${getStatusBadgeClass(pesanan.status_pesanan)}`}>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-bold ${getStatusBadgeClass(pesanan.status_pesanan)}`}
+                    >
                       {pesanan.status_pesanan}
                     </span>
                   </td>
-                  <td className="px-5 py-4 text-slate-500">{pesanan.catatan || '-'}</td>
+                  <td className="px-5 py-4 text-slate-500">
+                    {pesanan.catatan || "-"}
+                  </td>
                   <td className="px-5 py-4 text-right">
                     {!isFinished && (
                       <div className="flex justify-end gap-2">
@@ -234,7 +267,9 @@ export default function PesananPage({ barang = [], onRefresh, notify }) {
             })}
           </tbody>
         </table>
-        {!pesananList.length && <p className="p-10 text-center text-slate-500">Belum ada pesanan.</p>}
+        {!pesananList.length && (
+          <p className="p-10 text-center text-slate-500">Belum ada pesanan.</p>
+        )}
       </div>
     </>
   );
