@@ -3,21 +3,29 @@ Sistem Informasi Manajemen Stok Warung
 
 1. FITUR UTAMA
 
-- Dashboard / Ringkasan
-  Menampilkan jumlah total barang, jumlah transaksi masuk, jumlah transaksi keluar,
+- Dashboard / Ringkasan Finansial & Stok
+  Menampilkan 4 kartu statistik utama (StatCard):
+  1. Total Item Masuk (akumulasi kuantitas barang masuk).
+  2. Total Item Keluar (akumulasi kuantitas barang keluar).
+  3. Total Pengeluaran Kulakan (total modal restok dalam format Rupiah).
+  4. Total Omzet Penjualan (total penjualan keluar dalam format Rupiah).
+  Juga menampilkan jumlah master barang, frekuensi transaksi masuk/keluar,
   dan daftar barang yang stoknya sudah menyentuh batas minimum.
 
-- Master Barang
-  Menampilkan katalog barang dalam bentuk tabel.
-  Bisa menambah barang baru.
-  Bisa mengubah nama barang, stok saat ini, dan stok minimum.
+- Master Barang (dengan Harga Beli & Harga Jual)
+  Menampilkan katalog barang dalam bentuk tabel lengkap dengan kolom Harga Beli dan Harga Jual (format Rupiah).
+  Bisa menambah barang baru dengan input Nama Barang, Stok Saat Ini, Stok Minimum, Harga Beli / Dus, dan Harga Jual / Dus.
+  Bisa mengubah data barang termasuk penyesuaian harga beli dan harga jual.
   Menampilkan status stok: Aman atau Stok rendah.
 
-- Transaksi In / Out
-  Mencatat barang masuk saat restok.
-  Mencatat barang keluar saat barang terjual, rusak, atau berkurang.
-  Jumlah stok diperbarui oleh backend setelah transaksi berhasil.
-  Transaksi keluar ditolak jika stok tidak mencukupi.
+- Transaksi In / Out (Kulakan & Penjualan)
+  Mencatat barang masuk saat restok:
+  - Menyimpan harga beli kulakan ke riwayat transaksi.
+  - Menyediakan input opsional untuk memperbarui "Harga Beli Baru" dan "Harga Jual Baru" di master barang secara otomatis.
+  Mencatat barang keluar saat barang terjual:
+  - Otomatis mengambil harga jual master barang untuk pencatatan omzet.
+  - Memungkinkan penyesuaian manual di form jika ada diskon khusus atau perubahan harga.
+  - Memotong stok barang secara aman dengan validasi ketat (mencegah stok minus / error STOK_TIDAK_CUKUP).
 
 - Fitur Pesanan (Pre-Order / Booking)
   Mencatat pesanan dari pelanggan untuk barang tertentu.
@@ -25,12 +33,12 @@ Sistem Informasi Manajemen Stok Warung
   Menyediakan aksi selesaikan pesanan (otomatis memotong stok via transaksi keluar) atau batalkan pesanan.
 
 - Riwayat Transaksi
-  Menampilkan waktu transaksi, nama barang, jenis transaksi, dan jumlah.
-  Jenis transaksi terdiri dari Masuk dan Keluar.
+  Menampilkan jejak transaksi secara terperinci: waktu transaksi, nama barang, jenis transaksi, jumlah, harga beli, harga jual, dan total nilai transaksi dalam format Rupiah.
+  Jenis transaksi terdiri dari Masuk (Kulakan) dan Keluar (Penjualan).
 
 - Peringatan Stok Minimum
   Barang yang stoknya sama dengan atau di bawah stok minimum ditampilkan sebagai
-  barang yang perlu diperhatikan.
+  barang yang perlu diperhatikan, dilengkapi informasi harga beli dan harga jual.
 
 - Navigasi Satu Aplikasi
   Dashboard, Master Barang, Transaksi, Pesanan, dan Riwayat berada dalam satu web app.
@@ -48,29 +56,31 @@ Frontend:
 - Vite
 - Tailwind CSS
 - Lucide React untuk ikon
-- JavaScript JSX
+- JavaScript JSX murni (tanpa TypeScript)
+- Intl.NumberFormat('id-ID') untuk pemformatan mata uang Rupiah (formatRupiah)
 
 Backend:
 - Node.js
 - Express
 - CORS
 - dotenv
-- Supabase JavaScript Client
+- Supabase JavaScript Client (@supabase/supabase-js)
 
 Database:
 - Supabase PostgreSQL
-- Tabel tabel_barang
-- Tabel tabel_transaksi
+- Tabel tabel_barang (kolom tambahan: harga_beli NUMERIC, harga_jual NUMERIC)
+- Tabel tabel_transaksi (kolom tambahan: harga_beli NUMERIC, harga_jual NUMERIC)
 - Tabel tabel_pesanan
-- Function catat_transaksi_stok untuk memproses transaksi dan memperbarui stok
+- Function catat_transaksi_stok untuk memproses mutasi stok atomik, proteksi stok minus, dan pencatatan harga transaksi/master
 
 Struktur aplikasi:
 - apps/web: frontend React
 - apps/api: backend Express
-- supabase.sql: struktur tabel, relasi, dan function database
+- supabase.sql: struktur tabel, relasi, migration alter table, dan stored procedure database
 
 3. ENDPOINT API YANG DIPAKAI
 
+GET    /api/dashboard-stats
 GET    /api/barang
 GET    /api/barang/low-stock
 POST   /api/barang
@@ -90,7 +100,6 @@ GET    /api/health
 - Login atau autentikasi pengguna belum tersedia.
 - Belum ada fitur hapus barang.
 - Belum ada export laporan ke Excel atau PDF.
-- Belum ada grafik penjualan atau laporan keuntungan.
 - Backend membutuhkan file apps/api/.env agar koneksi Supabase berjalan.
 - Frontend memakai VITE_API_URL jika API tidak berjalan di alamat default.
 
@@ -101,6 +110,9 @@ npm install
 
 Jalankan frontend dan backend:
 npm run dev
+
+Jalankan automated test:
+npm test
 
 Build frontend:
 npm run build

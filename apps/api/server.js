@@ -3,6 +3,7 @@ import cors from 'cors';
 import barangRoutes from './routes/barang.js';
 import transaksiRoutes from './routes/transaksi.js';
 import pesananRoutes from './routes/pesanan.js';
+import dashboardRoutes from './routes/dashboard.js';
 
 const app = express();
 app.use(cors());
@@ -11,6 +12,7 @@ app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 app.use('/api/barang', barangRoutes);
 app.use('/api/transaksi', transaksiRoutes);
 app.use('/api/pesanan', pesananRoutes);
+app.use('/api/dashboard-stats', dashboardRoutes);
 app.use((error, _req, res, _next) => {
   console.error(error);
   res.status(error.status || 500).json({ message: 'Terjadi kesalahan pada server.', detail: error.message });

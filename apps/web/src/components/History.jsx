@@ -1,3 +1,5 @@
+import { formatRupiah } from "../utils/format";
+
 const formatDate = (value) =>
   value
     ? new Intl.DateTimeFormat("id-ID", {
@@ -14,36 +16,65 @@ export default function History({ transactions }) {
         <h2 className="display mt-1 text-3xl font-bold">Riwayat transaksi</h2>
       </div>
       <div className="overflow-hidden rounded-2xl border border-[#e1e8e1] bg-white shadow-sm">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b bg-[#f8faf8] text-xs uppercase tracking-wider text-slate-500">
-            <tr>
-              <th className="px-5 py-4">Waktu</th>
-              <th className="px-5 py-4">Barang</th>
-              <th className="px-5 py-4">Jenis</th>
-              <th className="px-5 py-4">Jumlah</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {transactions.map((item) => (
-              <tr key={item.id_transaksi}>
-                <td className="px-5 py-4 text-slate-500">
-                  {formatDate(item.created_at)}
-                </td>
-                <td className="px-5 py-4 font-semibold">
-                  {item.tabel_barang?.nama_barang || "Barang dihapus"}
-                </td>
-                <td className="px-5 py-4">
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-bold ${item.jenis_transaksi === "masuk" ? "bg-blue-50 text-blue-700" : "bg-orange-50 text-orange-700"}`}
-                  >
-                    {item.jenis_transaksi === "masuk" ? "Masuk" : "Keluar"}
-                  </span>
-                </td>
-                <td className="px-5 py-4 font-bold">{item.jumlah}</td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="border-b bg-[#f8faf8] text-xs uppercase tracking-wider text-slate-500">
+              <tr>
+                <th className="px-5 py-4">Waktu</th>
+                <th className="px-5 py-4">Barang</th>
+                <th className="px-5 py-4">Jenis</th>
+                <th className="px-5 py-4">Jumlah</th>
+                <th className="px-5 py-4">Harga Beli</th>
+                <th className="px-5 py-4">Harga Jual</th>
+                <th className="px-5 py-4">Total Nilai</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {transactions.map((item) => {
+                const subtotal =
+                  item.jenis_transaksi === "masuk"
+                    ? (Number(item.jumlah) || 0) * (Number(item.harga_beli) || 0)
+                    : (Number(item.jumlah) || 0) * (Number(item.harga_jual) || 0);
+
+                return (
+                  <tr key={item.id_transaksi}>
+                    <td className="px-5 py-4 text-slate-500">
+                      {formatDate(item.created_at)}
+                    </td>
+                    <td className="px-5 py-4 font-semibold">
+                      {item.tabel_barang?.nama_barang || "Barang dihapus"}
+                    </td>
+                    <td className="px-5 py-4">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-bold ${
+                          item.jenis_transaksi === "masuk"
+                            ? "bg-blue-50 text-blue-700"
+                            : "bg-orange-50 text-orange-700"
+                        }`}
+                      >
+                        {item.jenis_transaksi === "masuk" ? "Masuk" : "Keluar"}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 font-bold">{item.jumlah}</td>
+                    <td className="px-5 py-4 text-slate-600">
+                      {item.jenis_transaksi === "masuk"
+                        ? formatRupiah(item.harga_beli)
+                        : "-"}
+                    </td>
+                    <td className="px-5 py-4 text-slate-600">
+                      {item.jenis_transaksi === "keluar"
+                        ? formatRupiah(item.harga_jual)
+                        : "-"}
+                    </td>
+                    <td className="px-5 py-4 font-semibold text-slate-800">
+                      {formatRupiah(subtotal)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
         {!transactions.length && (
           <p className="p-10 text-center text-slate-500">
             Belum ada transaksi.

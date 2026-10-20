@@ -1,4 +1,5 @@
 import { Plus } from "lucide-react";
+import { formatRupiah } from "../utils/format";
 
 export default function BarangPage({ barang, onAdd, onEdit }) {
   return (
@@ -16,43 +17,56 @@ export default function BarangPage({ barang, onAdd, onEdit }) {
         </button>
       </div>
       <div className="overflow-hidden rounded-2xl border border-[#e1e8e1] bg-white shadow-sm">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b bg-[#f8faf8] text-xs uppercase tracking-wider text-slate-500">
-            <tr>
-              <th className="px-5 py-4">Nama barang</th>
-              <th className="px-5 py-4">Stok saat ini</th>
-              <th className="px-5 py-4">Batas minimum</th>
-              <th className="px-5 py-4">Status</th>
-              <th className="px-5 py-4"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {barang.map((item) => (
-              <tr key={item.id_barang}>
-                <td className="px-5 py-4 font-semibold">{item.nama_barang}</td>
-                <td className="px-5 py-4">{item.stok_saat_ini}</td>
-                <td className="px-5 py-4">{item.stok_minimum}</td>
-                <td className="px-5 py-4">
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-bold ${item.stok_saat_ini <= item.stok_minimum ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-700"}`}
-                  >
-                    {item.stok_saat_ini <= item.stok_minimum
-                      ? "Stok rendah"
-                      : "Aman"}
-                  </span>
-                </td>
-                <td className="px-5 py-4 text-right">
-                  <button
-                    onClick={() => onEdit(item)}
-                    className="font-bold text-emerald-700 hover:underline"
-                  >
-                    Edit
-                  </button>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="border-b bg-[#f8faf8] text-xs uppercase tracking-wider text-slate-500">
+              <tr>
+                <th className="px-5 py-4">Nama barang</th>
+                <th className="px-5 py-4">Harga Beli</th>
+                <th className="px-5 py-4">Harga Jual</th>
+                <th className="px-5 py-4">Stok saat ini</th>
+                <th className="px-5 py-4">Batas minimum</th>
+                <th className="px-5 py-4">Status</th>
+                <th className="px-5 py-4"></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {barang.map((item) => (
+                <tr key={item.id_barang}>
+                  <td className="px-5 py-4 font-semibold">{item.nama_barang}</td>
+                  <td className="px-5 py-4 text-slate-600">
+                    {formatRupiah(item.harga_beli)}
+                  </td>
+                  <td className="px-5 py-4 font-medium text-emerald-700">
+                    {formatRupiah(item.harga_jual)}
+                  </td>
+                  <td className="px-5 py-4 font-bold">{item.stok_saat_ini}</td>
+                  <td className="px-5 py-4 text-slate-500">{item.stok_minimum}</td>
+                  <td className="px-5 py-4">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-bold ${item.stok_saat_ini <= item.stok_minimum
+                          ? "bg-red-50 text-red-600"
+                          : "bg-emerald-50 text-emerald-700"
+                        }`}
+                    >
+                      {item.stok_saat_ini <= item.stok_minimum
+                        ? "Stok rendah"
+                        : "Aman"}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4 text-right">
+                    <button
+                      onClick={() => onEdit(item)}
+                      className="font-bold text-emerald-700 hover:underline"
+                    >
+                      Edit
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         {!barang.length && (
           <p className="p-10 text-center text-slate-500">
             Belum ada barang terdaftar.

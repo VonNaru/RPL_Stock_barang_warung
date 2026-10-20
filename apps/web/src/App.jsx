@@ -33,6 +33,7 @@ export default function App() {
   const [barang, setBarang] = useState([]);
   const [lowStock, setLowStock] = useState([]);
   const [transactions, setTransactions] = useState([]);
+  const [stats, setStats] = useState(null);
   const [modal, setModal] = useState(null);
   const [notice, setNotice] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -41,21 +42,26 @@ export default function App() {
     id_barang: "",
     jenis_transaksi: "masuk",
     jumlah: 1,
+    harga_beli: "",
+    harga_jual: "",
   });
 
   const load = async () => {
     setLoading(true);
     try {
-      const [items, low, history] = await Promise.all([
+      const [items, low, history, dashboardStats] = await Promise.all([
         request("/barang"),
         request("/barang/low-stock"),
         request("/transaksi"),
+        request("/dashboard-stats").catch(() => null),
       ]);
-      setBarang(items);
-      setLowStock(low);
-      setTransactions(history);
-      if (!transaction.id_barang && items[0])
-        setTransaction({ ...transaction, id_barang: items[0].id_barang });
+      setBarang(items || []);
+      setLowStock(low || []);
+      setTransactions(history || []);
+      setStats(dashboardStats);
+      if (!transaction.id_barang && items && items[0]) {
+        setTransaction((prev) => ({ ...prev, id_barang: items[0].id_barang }));
+      }
     } catch (error) {
       setNotice({ type: "error", message: error.message });
     } finally {
@@ -87,15 +93,50 @@ export default function App() {
   const saveTransaction = async (event) => {
     event.preventDefault();
     try {
+      const payload = {
+        id_barang: transaction.id_barang,
+        jenis_transaksi: transaction.jenis_transaksi,
+        jumlah: transaction.jumlah,
+      };
+
+      if (transaction.jenis_transaksi === "masuk") {
+        if (
+          transaction.harga_beli !== "" &&
+          transaction.harga_beli !== undefined
+        ) {
+          payload.harga_beli = Number(transaction.harga_beli);
+        }
+        if (
+          transaction.harga_jual !== "" &&
+          transaction.harga_jual !== undefined
+        ) {
+          payload.harga_jual = Number(transaction.harga_jual);
+        }
+      } else {
+        if (
+          transaction.harga_jual !== "" &&
+          transaction.harga_jual !== undefined
+        ) {
+          payload.harga_jual = Number(transaction.harga_jual);
+        }
+      }
+
       await request("/transaksi", {
         method: "POST",
-        body: JSON.stringify(transaction),
+        body: JSON.stringify(payload),
       });
+
       setNotice({
         type: "success",
         message: "Transaksi berhasil dicatat dan stok diperbarui.",
       });
-      setTransaction({ ...transaction, jumlah: 1 });
+
+      setTransaction((prev) => ({
+        ...prev,
+        jumlah: 1,
+        harga_beli: "",
+        harga_jual: "",
+      }));
       load();
     } catch (error) {
       setNotice({ type: "error", message: error.message });
@@ -180,6 +221,7 @@ export default function App() {
               lowStock={lowStock}
               barang={barang}
               transactions={transactions}
+              stats={stats}
             />
           )}
           {page === "barang" && (

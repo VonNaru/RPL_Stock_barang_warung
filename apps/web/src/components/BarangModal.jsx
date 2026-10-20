@@ -2,11 +2,20 @@ import { useState } from "react";
 import { X } from "lucide-react";
 
 export default function BarangModal({ item, onClose, onSave }) {
-  const [form, setForm] = useState(
-    item || { nama_barang: "", stok_saat_ini: 0, stok_minimum: 0 },
-  );
+  const [form, setForm] = useState({
+    nama_barang: item?.nama_barang || "",
+    stok_saat_ini: item?.stok_saat_ini ?? 0,
+    stok_minimum: item?.stok_minimum ?? 0,
+    harga_beli: item?.harga_beli ?? 0,
+    harga_jual: item?.harga_jual ?? 0,
+  });
+
   const update = (key, value) =>
-    setForm({ ...form, [key]: key === "nama_barang" ? value : Number(value) });
+    setForm({
+      ...form,
+      [key]: key === "nama_barang" ? value : Number(value),
+    });
+
   return (
     <div className="fixed inset-0 z-20 flex items-center justify-center bg-[#17211b]/40 p-4 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
@@ -58,6 +67,30 @@ export default function BarangModal({ item, onClose, onSave }) {
                 value={form.stok_minimum}
                 onChange={(event) => update("stok_minimum", event.target.value)}
                 className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3"
+              />
+            </label>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <label className="block text-sm font-semibold">
+              Harga Beli / Dus
+              <input
+                type="number"
+                min="0"
+                value={form.harga_beli}
+                onChange={(event) => update("harga_beli", event.target.value)}
+                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3"
+                placeholder="0"
+              />
+            </label>
+            <label className="block text-sm font-semibold">
+              Harga Jual / Dus
+              <input
+                type="number"
+                min="0"
+                value={form.harga_jual}
+                onChange={(event) => update("harga_jual", event.target.value)}
+                className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3"
+                placeholder="0"
               />
             </label>
           </div>

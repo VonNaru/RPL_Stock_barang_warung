@@ -25,11 +25,15 @@ router.post('/', async (req, res, next) => {
     const namaBarang = req.body.nama_barang ?? req.body.namaBarang;
     const stokSaatIni = req.body.stok_saat_ini ?? req.body.stokSaatIni ?? 0;
     const stokMinimum = req.body.stok_minimum ?? req.body.stokMinimum ?? 0;
+    const hargaBeli = req.body.harga_beli ?? req.body.hargaBeli ?? 0;
+    const hargaJual = req.body.harga_jual ?? req.body.hargaJual ?? 0;
 
     const validation = validateBarangInput({
       nama_barang: namaBarang,
       stok_saat_ini: stokSaatIni,
-      stok_minimum: stokMinimum
+      stok_minimum: stokMinimum,
+      harga_beli: hargaBeli,
+      harga_jual: hargaJual
     });
 
     if (!validation.isValid) {
@@ -47,11 +51,15 @@ router.put('/:id', async (req, res, next) => {
     const namaBarang = req.body.nama_barang ?? req.body.namaBarang;
     const stokSaatIni = req.body.stok_saat_ini ?? req.body.stokSaatIni;
     const stokMinimum = req.body.stok_minimum ?? req.body.stokMinimum;
+    const hargaBeli = req.body.harga_beli ?? req.body.hargaBeli;
+    const hargaJual = req.body.harga_jual ?? req.body.hargaJual;
 
     const validation = validateBarangInput({
       nama_barang: namaBarang,
       stok_saat_ini: stokSaatIni,
-      stok_minimum: stokMinimum
+      stok_minimum: stokMinimum,
+      harga_beli: hargaBeli,
+      harga_jual: hargaJual
     });
 
     if (!validation.isValid) {

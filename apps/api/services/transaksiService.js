@@ -4,7 +4,18 @@
 
 export const isPositiveInteger = (value) => Number.isInteger(value) && value > 0;
 
-export const validateTransaksiInput = ({ id_barang, jenis_transaksi, jumlah }) => {
+export const isNonNegativeNumber = (value) => {
+  if (typeof value === 'number') {
+    return !Number.isNaN(value) && value >= 0;
+  }
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value);
+    return !Number.isNaN(parsed) && parsed >= 0;
+  }
+  return false;
+};
+
+export const validateTransaksiInput = ({ id_barang, jenis_transaksi, jumlah, harga_beli, harga_jual }) => {
   const errors = [];
 
   if (!id_barang || typeof id_barang !== 'string' || !id_barang.trim()) {
@@ -19,14 +30,40 @@ export const validateTransaksiInput = ({ id_barang, jenis_transaksi, jumlah }) =
     errors.push('Jumlah transaksi harus berupa bilangan bulat positif (> 0).');
   }
 
+  if (harga_beli !== undefined && harga_beli !== null && harga_beli !== '' && !isNonNegativeNumber(harga_beli)) {
+    errors.push('Harga beli harus berupa angka lebih besar atau sama dengan 0.');
+  }
+
+  if (harga_jual !== undefined && harga_jual !== null && harga_jual !== '' && !isNonNegativeNumber(harga_jual)) {
+    errors.push('Harga jual harus berupa angka lebih besar atau sama dengan 0.');
+  }
+
+  if (errors.length > 0) {
+    return {
+      isValid: false,
+      errors,
+      sanitized: null
+    };
+  }
+
+  const sanitized = {
+    id_barang: id_barang.trim(),
+    jenis_transaksi,
+    jumlah: Number(jumlah)
+  };
+
+  if (harga_beli !== undefined && harga_beli !== null && harga_beli !== '') {
+    sanitized.harga_beli = Number(harga_beli);
+  }
+
+  if (harga_jual !== undefined && harga_jual !== null && harga_jual !== '') {
+    sanitized.harga_jual = Number(harga_jual);
+  }
+
   return {
-    isValid: errors.length === 0,
-    errors,
-    sanitized: errors.length === 0 ? {
-      id_barang: id_barang.trim(),
-      jenis_transaksi,
-      jumlah: Number(jumlah)
-    } : null
+    isValid: true,
+    errors: [],
+    sanitized
   };
 };
 
