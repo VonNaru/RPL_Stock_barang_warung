@@ -93,7 +93,7 @@ export default function TransactionPage({
         {selectedBarang && (
           <div className="mt-3 rounded-xl bg-slate-50 p-3 text-xs text-slate-600">
             <span className="font-semibold">{selectedBarang.nama_barang}</span>{" "}
-            &bull; Stok: <span className="font-bold">{selectedBarang.stok_saat_ini}</span>{" "}
+            &bull; Stok: <span className="font-bold">{selectedBarang.stok_saat_ini} Dus</span>{" "}
             &bull; Harga Beli:{" "}
             <span className="font-semibold">
               {formatRupiah(selectedBarang.harga_beli)}
@@ -118,18 +118,31 @@ export default function TransactionPage({
             </select>
           </label>
           <label className="block text-sm font-semibold">
-            Jumlah
+            Jumlah (Dus)
             <input
               required
               min="1"
               type="number"
               value={transaction.jumlah}
-              onChange={(event) =>
-                setTransaction({
-                  ...transaction,
-                  jumlah: Number(event.target.value),
-                })
-              }
+              onFocus={(event) => event.target.select()}
+              onChange={(event) => {
+                const val = event.target.value;
+                if (val === "") {
+                  setTransaction({ ...transaction, jumlah: "" });
+                } else {
+                  // Konversi ke integer agar tidak ada leading zero (misal 014 -> 14)
+                  const num = parseInt(val, 10);
+                  setTransaction({
+                    ...transaction,
+                    jumlah: isNaN(num) ? "" : num,
+                  });
+                }
+              }}
+              onBlur={() => {
+                if (!transaction.jumlah || Number(transaction.jumlah) < 1) {
+                  setTransaction({ ...transaction, jumlah: 1 });
+                }
+              }}
               className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3"
             />
           </label>
@@ -151,21 +164,20 @@ export default function TransactionPage({
                 <input
                   type="number"
                   min="0"
+                  onFocus={(event) => event.target.select()}
                   placeholder={
                     selectedBarang
                       ? `Saat ini: ${formatRupiah(selectedBarang.harga_beli)}`
                       : "0"
                   }
                   value={transaction.harga_beli ?? ""}
-                  onChange={(event) =>
+                  onChange={(event) => {
+                    const val = event.target.value;
                     setTransaction({
                       ...transaction,
-                      harga_beli:
-                        event.target.value === ""
-                          ? ""
-                          : Number(event.target.value),
-                    })
-                  }
+                      harga_beli: val === "" ? "" : Number(val),
+                    });
+                  }}
                   className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm"
                 />
               </label>
@@ -174,21 +186,20 @@ export default function TransactionPage({
                 <input
                   type="number"
                   min="0"
+                  onFocus={(event) => event.target.select()}
                   placeholder={
                     selectedBarang
                       ? `Saat ini: ${formatRupiah(selectedBarang.harga_jual)}`
                       : "0"
                   }
                   value={transaction.harga_jual ?? ""}
-                  onChange={(event) =>
+                  onChange={(event) => {
+                    const val = event.target.value;
                     setTransaction({
                       ...transaction,
-                      harga_jual:
-                        event.target.value === ""
-                          ? ""
-                          : Number(event.target.value),
-                    })
-                  }
+                      harga_jual: val === "" ? "" : Number(val),
+                    });
+                  }}
                   className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm"
                 />
               </label>
@@ -202,16 +213,15 @@ export default function TransactionPage({
                 required
                 type="number"
                 min="0"
+                onFocus={(event) => event.target.select()}
                 value={transaction.harga_jual ?? ""}
-                onChange={(event) =>
+                onChange={(event) => {
+                  const val = event.target.value;
                   setTransaction({
                     ...transaction,
-                    harga_jual:
-                      event.target.value === ""
-                        ? ""
-                        : Number(event.target.value),
-                  })
-                }
+                    harga_jual: val === "" ? "" : Number(val),
+                  });
+                }}
                 className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"
               />
             </label>

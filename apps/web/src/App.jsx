@@ -96,7 +96,7 @@ export default function App() {
       const payload = {
         id_barang: transaction.id_barang,
         jenis_transaksi: transaction.jenis_transaksi,
-        jumlah: transaction.jumlah,
+        jumlah: Number(transaction.jumlah) || 1,
       };
 
       if (transaction.jenis_transaksi === "masuk") {

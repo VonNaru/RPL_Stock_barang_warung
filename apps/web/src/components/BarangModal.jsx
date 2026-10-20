@@ -13,8 +13,18 @@ export default function BarangModal({ item, onClose, onSave }) {
   const update = (key, value) =>
     setForm({
       ...form,
-      [key]: key === "nama_barang" ? value : Number(value),
+      [key]: key === "nama_barang" ? value : value === "" ? "" : Number(value),
     });
+
+  const handleSave = () => {
+    onSave({
+      ...form,
+      stok_saat_ini: Number(form.stok_saat_ini) || 0,
+      stok_minimum: Number(form.stok_minimum) || 0,
+      harga_beli: Number(form.harga_beli) || 0,
+      harga_jual: Number(form.harga_jual) || 0,
+    });
+  };
 
   return (
     <div className="fixed inset-0 z-20 flex items-center justify-center bg-[#17211b]/40 p-4 backdrop-blur-sm">
@@ -52,6 +62,7 @@ export default function BarangModal({ item, onClose, onSave }) {
               <input
                 type="number"
                 min="0"
+                onFocus={(event) => event.target.select()}
                 value={form.stok_saat_ini}
                 onChange={(event) =>
                   update("stok_saat_ini", event.target.value)
@@ -64,6 +75,7 @@ export default function BarangModal({ item, onClose, onSave }) {
               <input
                 type="number"
                 min="0"
+                onFocus={(event) => event.target.select()}
                 value={form.stok_minimum}
                 onChange={(event) => update("stok_minimum", event.target.value)}
                 className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3"
@@ -76,6 +88,7 @@ export default function BarangModal({ item, onClose, onSave }) {
               <input
                 type="number"
                 min="0"
+                onFocus={(event) => event.target.select()}
                 value={form.harga_beli}
                 onChange={(event) => update("harga_beli", event.target.value)}
                 className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3"
@@ -87,6 +100,7 @@ export default function BarangModal({ item, onClose, onSave }) {
               <input
                 type="number"
                 min="0"
+                onFocus={(event) => event.target.select()}
                 value={form.harga_jual}
                 onChange={(event) => update("harga_jual", event.target.value)}
                 className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3"
@@ -103,7 +117,7 @@ export default function BarangModal({ item, onClose, onSave }) {
             Batal
           </button>
           <button
-            onClick={() => onSave(form)}
+            onClick={handleSave}
             className="rounded-xl bg-[#198754] px-5 py-3 text-sm font-bold text-white hover:bg-[#126b41]"
           >
             Simpan barang
