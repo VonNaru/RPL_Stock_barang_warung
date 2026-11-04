@@ -114,6 +114,52 @@ Catatan ini berisi pembaruan penting pada aplikasi Sistem Informasi Manajemen St
 
 ---
 
+## 2026-11-04
+
+### Fitur Autentikasi Pengguna & Login Sistem Warung
+
+- **Database (`supabase.sql`)**:
+  - Membuat tabel `public.tabel_pengguna` (`id_pengguna`, `username`, `password`, `nama_lengkap`, `role`, `created_at`).
+  - Menambahkan constraint unique pada kolom `username` dan index `idx_tabel_pengguna_username`.
+  - Menambahkan akun default (seed) awal: `admin` / `admin123` (Administrator) dan `kasir` / `kasir123` (Kasir).
+- **Backend API (`apps/api`)**:
+  - Membuat service `apps/api/services/authService.js` untuk validasi login, validasi registrasi, hashing password berbasis `scrypt`, dan verifikasi password (mendukung upgrade otomatis dari plaintext seed).
+  - Membuat router `apps/api/routes/auth.js` (`POST /api/auth/login`, `POST /api/auth/register`, `GET /api/auth/users`, `POST /api/auth/logout`).
+  - Mendaftarkan rute `/api/auth` pada `apps/api/server.js`.
+- **Frontend UI (`apps/web`)**:
+  - Membuat komponen `src/components/LoginPage.jsx` dengan antarmuka modern yang responsif, indikator loading, pesan kesalahan interaktif, dan tombol klik cepat akun bawaan.
+  - Memperbarui `src/App.jsx` untuk proteksi halaman berbasis sesi login (`localStorage`), menampilkan profil pengguna dan badge role di sidebar, serta menyediakan tombol logout.
+- **Pengujian**:
+  - Menambahkan test suite baru `tests/7_auth_login.test.js` dengan 11 skenario pengujian.
+  - Seluruh 50 unit test pada 7 test suite lulus (`npm test`).
+  - Frontend berhasil di-build tanpa error (`npm run build`).
+
+---
+
+## 2026-11-04 (Pembaruan Multi-Tenant)
+
+### Fitur Isolasi Data Stok & Multi-Tenant per Akun Pengguna
+
+- **Database (`supabase.sql`)**:
+  - Menambahkan kolom `id_pengguna uuid references public.tabel_pengguna(id_pengguna) on delete cascade` pada `tabel_barang`, `tabel_transaksi`, dan `tabel_pesanan`.
+  - Menambahkan index `idx_tabel_barang_id_pengguna`, `idx_tabel_transaksi_id_pengguna`, dan `idx_tabel_pesanan_id_pengguna`.
+  - Memperbarui stored procedure `catat_transaksi_stok` untuk otomatis mengambil `id_pengguna` dari master barang dan mencatatnya ke tabel transaksi.
+  - Menambahkan data seed awal terpisah: barang untuk toko `admin` (Beras, Minyak, Gula) dan barang untuk toko `kasir` (Indomie, Kopi, Teh).
+- **Backend API (`apps/api`)**:
+  - Membuat middleware `apps/api/middleware/authMiddleware.js` untuk mengekstrak identitas pengguna aktif dari header `x-user-id`, token bearer `Authorization`, atau query params.
+  - Memperbarui rute `barang.js`, `transaksi.js`, `pesanan.js`, dan `dashboard.js` agar secara ketat memfilter data berdasarkan akun pengguna yang sedang login.
+- **Frontend UI (`apps/web`)**:
+  - Menambahkan tab switcher dan form pendaftaran akun baru pada `LoginPage.jsx` (Nama Lengkap / Toko, Username, Password, Role).
+  - Mengintegrasikan fungsi `handleRegister` di `App.jsx` dengan auto-login setelah pendaftaran sukses.
+  - Memperbarui fungsi `request()` di `App.jsx` untuk selalu menyertakan header `x-user-id` dan `Authorization`.
+  - Memperbarui mekanisme perpindahan akun agar state inventaris, dropdown barang transaksi, dan ringkasan dasbor langsung menyesuaikan saat berganti akun login.
+- **Pengujian**:
+  - Menambahkan test suite baru `tests/8_multi_tenant_isolation.test.js` dengan 8 skenario pengujian isolasi data dan middleware.
+  - Seluruh 58 unit test pada 8 test suite lulus (`npm test`).
+  - Frontend React berhasil dikompilasi tanpa error (`npm run build`).
+
+---
+
 ## Catatan Pembaruan Berikutnya
 
 Gunakan bagian ini untuk menambahkan perubahan baru. Format yang disarankan:

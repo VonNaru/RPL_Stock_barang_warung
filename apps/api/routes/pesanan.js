@@ -9,26 +9,38 @@ import {
 
 const router = Router();
 
-router.get('/', async (_req, res, next) => {
+router.get('/', async (req, res, next) => {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('tabel_pesanan')
-      .select('*, tabel_barang(nama_barang, stok_saat_ini)')
+      .select('*, tabel_barang(nama_barang, stok_saat_ini, id_pengguna)')
       .order('created_at', { ascending: false });
+
+    if (req.userId) {
+      query = query.eq('id_pengguna', req.userId);
+    }
+
+    const { data, error } = await query;
     if (error) throw error;
-    res.json(data);
+    res.json(data || []);
   } catch (error) { next(error); }
 });
 
-router.get('/menunggu-stok', async (_req, res, next) => {
+router.get('/menunggu-stok', async (req, res, next) => {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('tabel_pesanan')
-      .select('*, tabel_barang(nama_barang, stok_saat_ini)')
+      .select('*, tabel_barang(nama_barang, stok_saat_ini, id_pengguna)')
       .eq('status_pesanan', 'Menunggu Stok')
       .order('created_at', { ascending: true });
+
+    if (req.userId) {
+      query = query.eq('id_pengguna', req.userId);
+    }
+
+    const { data, error } = await query;
     if (error) throw error;
-    res.json(data);
+    res.json(data || []);
   } catch (error) { next(error); }
 });
 
@@ -53,14 +65,19 @@ router.post('/', async (req, res, next) => {
       });
     }
 
-    const { data: barang, error: barangError } = await supabase
+    let barangQuery = supabase
       .from('tabel_barang')
-      .select('stok_saat_ini')
-      .eq('id_barang', validation.sanitized.id_barang)
-      .single();
+      .select('stok_saat_ini, id_pengguna')
+      .eq('id_barang', validation.sanitized.id_barang);
+
+    if (req.userId) {
+      barangQuery = barangQuery.eq('id_pengguna', req.userId);
+    }
+
+    const { data: barang, error: barangError } = await barangQuery.maybeSingle();
 
     if (barangError || !barang) {
-      return res.status(404).json({ message: 'Barang tidak ditemukan.' });
+      return res.status(404).json({ message: 'Barang tidak ditemukan atau bukan milik akun Anda.' });
     }
 
     const statusPesanan = determineInitialOrderStatus({
@@ -68,15 +85,18 @@ router.post('/', async (req, res, next) => {
       jumlah_pesanan: validation.sanitized.jumlah_pesanan
     });
 
+    const payload = {
+      nama_pelanggan: validation.sanitized.nama_pelanggan,
+      id_barang: validation.sanitized.id_barang,
+      jumlah_pesanan: validation.sanitized.jumlah_pesanan,
+      status_pesanan: statusPesanan,
+      catatan: validation.sanitized.catatan,
+      ...(req.userId ? { id_pengguna: req.userId } : {})
+    };
+
     const { data, error } = await supabase
       .from('tabel_pesanan')
-      .insert({
-        nama_pelanggan: validation.sanitized.nama_pelanggan,
-        id_barang: validation.sanitized.id_barang,
-        jumlah_pesanan: validation.sanitized.jumlah_pesanan,
-        status_pesanan: statusPesanan,
-        catatan: validation.sanitized.catatan
-      })
+      .insert(payload)
       .select('*, tabel_barang(nama_barang, stok_saat_ini)')
       .single();
 
@@ -88,11 +108,16 @@ router.post('/', async (req, res, next) => {
 router.post('/:Id/selesaikan', async (req, res, next) => {
   try {
     const { Id } = req.params;
-    const { data: pesanan, error: fetchError } = await supabase
+    let pesananQuery = supabase
       .from('tabel_pesanan')
-      .select('*, tabel_barang(id_barang, stok_saat_ini)')
-      .eq('id_pesanan', Id)
-      .single();
+      .select('*, tabel_barang(id_barang, stok_saat_ini, id_pengguna)')
+      .eq('id_pesanan', Id);
+
+    if (req.userId) {
+      pesananQuery = pesananQuery.eq('id_pengguna', req.userId);
+    }
+
+    const { data: pesanan, error: fetchError } = await pesananQuery.maybeSingle();
 
     if (fetchError || !pesanan) {
       return res.status(404).json({ message: 'Pesanan tidak ditemukan.' });
@@ -121,7 +146,7 @@ router.post('/:Id/selesaikan', async (req, res, next) => {
 
     if (rpcError) throw rpcError;
 
-    const { data, error: updateError } = await supabase
+    const { data: updated, error: updateError } = await supabase
       .from('tabel_pesanan')
       .update({ status_pesanan: 'Selesai', updated_at: new Date().toISOString() })
       .eq('id_pesanan', Id)
@@ -129,18 +154,23 @@ router.post('/:Id/selesaikan', async (req, res, next) => {
       .single();
 
     if (updateError) throw updateError;
-    res.json({ message: 'Pesanan berhasil diselesaikan.', data });
+    res.json({ message: 'Pesanan berhasil diselesaikan.', data: updated });
   } catch (error) { next(error); }
 });
 
 router.post('/:Id/batalkan', async (req, res, next) => {
   try {
     const { Id } = req.params;
-    const { data: pesanan, error: fetchError } = await supabase
+    let pesananQuery = supabase
       .from('tabel_pesanan')
-      .select('*')
-      .eq('id_pesanan', Id)
-      .single();
+      .select('*, tabel_barang(nama_barang)')
+      .eq('id_pesanan', Id);
+
+    if (req.userId) {
+      pesananQuery = pesananQuery.eq('id_pengguna', req.userId);
+    }
+
+    const { data: pesanan, error: fetchError } = await pesananQuery.maybeSingle();
 
     if (fetchError || !pesanan) {
       return res.status(404).json({ message: 'Pesanan tidak ditemukan.' });
@@ -151,15 +181,15 @@ router.post('/:Id/batalkan', async (req, res, next) => {
       return res.status(400).json({ message: check.reason });
     }
 
-    const { data, error } = await supabase
+    const { data: updated, error: updateError } = await supabase
       .from('tabel_pesanan')
       .update({ status_pesanan: 'Dibatalkan', updated_at: new Date().toISOString() })
       .eq('id_pesanan', Id)
-      .select('*, tabel_barang(nama_barang, stok_saat_ini)')
+      .select('*, tabel_barang(nama_barang)')
       .single();
 
-    if (error) throw error;
-    res.json({ message: 'Pesanan berhasil dibatalkan.', data });
+    if (updateError) throw updateError;
+    res.json({ message: 'Pesanan berhasil dibatalkan.', data: updated });
   } catch (error) { next(error); }
 });
 

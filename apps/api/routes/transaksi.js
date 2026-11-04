@@ -4,12 +4,19 @@ import { validateTransaksiInput } from '../services/transaksiService.js';
 
 const router = Router();
 
-router.get('/', async (_req, res, next) => {
+router.get('/', async (req, res, next) => {
   try {
-    const { data, error } = await supabase.from('tabel_transaksi')
-      .select('*, tabel_barang(nama_barang, harga_beli, harga_jual)').order('created_at', { ascending: false });
+    let query = supabase.from('tabel_transaksi')
+      .select('*, tabel_barang(nama_barang, harga_beli, harga_jual, id_pengguna)')
+      .order('created_at', { ascending: false });
+
+    if (req.userId) {
+      query = query.eq('id_pengguna', req.userId);
+    }
+
+    const { data, error } = await query;
     if (error) throw error;
-    res.json(data);
+    res.json(data || []);
   } catch (error) { next(error); }
 });
 
@@ -34,6 +41,19 @@ router.post('/', async (req, res, next) => {
         message: 'Barang, jenis transaksi, dan jumlah positif wajib diisi.',
         errors: validation.errors
       });
+    }
+
+    // Validasi kepemilikan barang jika akun login terdeteksi
+    if (req.userId) {
+      const { data: item } = await supabase
+        .from('tabel_barang')
+        .select('id_pengguna')
+        .eq('id_barang', validation.sanitized.id_barang)
+        .maybeSingle();
+
+      if (item && item.id_pengguna && item.id_pengguna !== req.userId) {
+        return res.status(403).json({ message: 'Anda tidak memiliki hak akses untuk barang ini.' });
+      }
     }
 
     let inputHargaBeli = Number(validation.sanitized.harga_beli ?? (hargaBeli !== undefined && hargaBeli !== '' ? hargaBeli : 0));
@@ -85,6 +105,9 @@ router.post('/', async (req, res, next) => {
       } else {
         txUpdate.harga_jual = inputHargaJual;
       }
+      if (req.userId) {
+        txUpdate.id_pengguna = req.userId;
+      }
       if (data?.id_transaksi) {
         await supabase.from('tabel_transaksi').update(txUpdate).eq('id_transaksi', data.id_transaksi);
       }
@@ -100,6 +123,11 @@ router.post('/', async (req, res, next) => {
       }
     } else if (error) {
       throw error;
+    }
+
+    // Pastikan id_pengguna tercatat pada transaksi
+    if (data?.id_transaksi && req.userId) {
+      supabase.from('tabel_transaksi').update({ id_pengguna: req.userId }).eq('id_transaksi', data.id_transaksi).then(() => {}).catch(() => {});
     }
 
     res.status(201).json(data);

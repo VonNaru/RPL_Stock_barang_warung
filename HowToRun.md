@@ -53,7 +53,7 @@ RPL_Stock_warung/
 │       │   ├── App.jsx       # State management & navigasi utama
 │       │   └── main.jsx      # Entry point React
 │       └── vite.config.js    # Konfigurasi bundler Vite
-├── tests/                    # Unit testing suite (User Story 1 - 6)
+├── tests/                    # Unit testing suite (User Story 1 - 7)
 ├── supabase.sql              # Skrip skema database, tabel, indeks, & stored procedure
 ├── package.json              # Konfigurasi workspace monorepo & script utama
 └── HowToRun.md               # Panduan menjalankan aplikasi (file ini)
@@ -83,10 +83,17 @@ Aplikasi membutuhkan database PostgreSQL yang di-host di Supabase. Ikuti langkah
 4. Buka file [`supabase.sql`](supabase.sql) pada direktori *root* proyek ini, salin seluruh isinya, dan tempelkan ke editor SQL Supabase.
 5. Klik tombol **Run** (atau tekan `Ctrl + Enter`).
 6. Skrip ini akan membuat komponen database:
-   - **`public.tabel_barang`**: Menyimpan katalog produk, stok saat ini, stok minimum, harga beli, dan harga jual.
-   - **`public.tabel_transaksi`**: Mencatat histori barang masuk (kulakan) dan barang keluar (penjualan).
-   - **`public.tabel_pesanan`**: Mencatat pesanan pelanggan (*pre-order / booking*) beserta statusnya.
-   - **Stored Procedure `catat_transaksi_stok`**: Fungsi mutasi stok atomik dengan proteksi stok tidak minus (`STOK_TIDAK_CUKUP`).
+   - **`public.tabel_barang`**: Menyimpan katalog produk, stok saat ini, stok minimum, harga beli, harga jual, dan relasi kepemilikan `id_pengguna`.
+   - **`public.tabel_transaksi`**: Mencatat histori barang masuk (kulakan) dan barang keluar (penjualan) terisolasi per akun (`id_pengguna`).
+   - **`public.tabel_pesanan`**: Mencatat pesanan pelanggan (*pre-order / booking*) terisolasi per akun (`id_pengguna`).
+   - **`public.tabel_pengguna`**: Menyimpan data akun pengguna/login (username, hashed password, nama lengkap, dan role: `admin`, `kasir`, `pemilik`).
+   - **Stored Procedure `catat_transaksi_stok`**: Fungsi mutasi stok atomik dengan proteksi stok tidak minus (`STOK_TIDAK_CUKUP`) dan pencatatan kepemilikan pengguna.
+
+> 💡 **Akun Login Bawaan & Stok Terpisah (Multi-Tenant Demo):**
+> - **Akun Admin**: Username: `admin` | Password: `admin123` (Katalog: Beras Maknyuss, Minyak Bimoli, Gula Pasir).
+> - **Akun Kasir**: Username: `kasir` | Password: `kasir123` (Katalog: Indomie Goreng, Kopi Kapal Api, Teh Celup).
+> - **Daftar Akun Baru**: Anda juga dapat membuat akun toko baru secara mandiri langsung dari halaman web melalui tab **"Daftar Akun Baru"** pada form login.
+> - *Setiap akun memiliki stok barang, mutasi transaksi, pesanan, dan ringkasan finansial yang terpisah total.*
 
 ---
 
@@ -168,7 +175,7 @@ npm run dev --workspace apps/web
 
 ## 7. Menjalankan Automated Tests
 
-Aplikasi dilengkapi dengan test suite unit & integrasi logika bisnis mencakup seluruh User Story (39 pengujian):
+Aplikasi dilengkapi dengan test suite unit & integrasi logika bisnis mencakup seluruh User Story (58 pengujian):
 
 ```bash
 npm test
@@ -181,6 +188,8 @@ npm test
 4. `tests/4_transaksi_keluar.test.js` — Pengurangan stok (penjualan) dan proteksi stok minus.
 5. `tests/5_pesanan_pelanggan.test.js` — Pre-order, penentuan status otomatis, penyelesaian, dan pembatalan.
 6. `tests/6_harga_omzet.test.js` — Kalkulasi harga beli, omzet penjualan, dan ringkasan finansial.
+7. `tests/7_auth_login.test.js` — Autentikasi pengguna, hashing password scrypt, validasi login & registrasi.
+8. `tests/8_multi_tenant_isolation.test.js` — Middleware autentikasi dan isolasi data multi-tenant antar akun.
 
 ---
 
@@ -206,6 +215,10 @@ npm run start --workspace apps/api
 | Method | Endpoint | Keterangan |
 | :--- | :--- | :--- |
 | `GET` | `/api/health` | Status kesehatan server API |
+| `POST` | `/api/auth/login` | Masuk ke sistem menggunakan username dan password |
+| `POST` | `/api/auth/register` | Mendaftarkan akun pengguna baru |
+| `GET` | `/api/auth/users` | Mengambil daftar pengguna aktif |
+| `POST` | `/api/auth/logout` | Keluar dari sistem |
 | `GET` | `/api/dashboard-stats` | Ringkasan metrik statistik finansial & arus barang |
 | `GET` | `/api/barang` | Mengambil seluruh katalog barang |
 | `GET` | `/api/barang/low-stock` | Mengambil barang dengan stok sama dengan/di bawah minimum |

@@ -4,17 +4,25 @@ import { filterLowStock, validateBarangInput } from '../services/barangService.j
 
 const router = Router();
 
-router.get('/', async (_req, res, next) => {
+router.get('/', async (req, res, next) => {
   try {
-    const { data, error } = await supabase.from('tabel_barang').select('*').order('nama_barang');
+    let query = supabase.from('tabel_barang').select('*').order('nama_barang');
+    if (req.userId) {
+      query = query.eq('id_pengguna', req.userId);
+    }
+    const { data, error } = await query;
     if (error) throw error;
-    res.json(data);
+    res.json(data || []);
   } catch (error) { next(error); }
 });
 
-router.get('/low-stock', async (_req, res, next) => {
+router.get('/low-stock', async (req, res, next) => {
   try {
-    const { data, error } = await supabase.from('tabel_barang').select('*').order('stok_saat_ini');
+    let query = supabase.from('tabel_barang').select('*').order('stok_saat_ini');
+    if (req.userId) {
+      query = query.eq('id_pengguna', req.userId);
+    }
+    const { data, error } = await query;
     if (error) throw error;
     res.json(filterLowStock(data || []));
   } catch (error) { next(error); }
@@ -40,7 +48,12 @@ router.post('/', async (req, res, next) => {
       return res.status(400).json({ message: 'Nama dan jumlah stok harus diisi dengan benar.', errors: validation.errors });
     }
 
-    const { data, error } = await supabase.from('tabel_barang').insert(validation.sanitized).select().single();
+    const payload = {
+      ...validation.sanitized,
+      ...(req.userId ? { id_pengguna: req.userId } : {})
+    };
+
+    const { data, error } = await supabase.from('tabel_barang').insert(payload).select().single();
     if (error) throw error;
     res.status(201).json(data);
   } catch (error) { next(error); }
@@ -66,7 +79,12 @@ router.put('/:id', async (req, res, next) => {
       return res.status(400).json({ message: 'Data barang tidak valid.', errors: validation.errors });
     }
 
-    const { data, error } = await supabase.from('tabel_barang').update(validation.sanitized).eq('id_barang', req.params.id).select().single();
+    let query = supabase.from('tabel_barang').update(validation.sanitized).eq('id_barang', req.params.id);
+    if (req.userId) {
+      query = query.eq('id_pengguna', req.userId);
+    }
+
+    const { data, error } = await query.select().single();
     if (error) throw error;
     res.json(data);
   } catch (error) { next(error); }

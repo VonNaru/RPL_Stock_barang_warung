@@ -36,6 +36,17 @@ Sistem Informasi Manajemen Stok Warung
   Menampilkan jejak transaksi secara terperinci: waktu transaksi, nama barang, jenis transaksi, jumlah, harga beli, harga jual, dan total nilai transaksi dalam format Rupiah.
   Jenis transaksi terdiri dari Masuk (Kulakan) dan Keluar (Penjualan).
 
+- Fitur Login & Multi-Tenant per Pengguna (Stok Terpisah)
+  Menyediakan halaman login untuk mengamankan akses ke sistem dengan isolasi data penuh:
+  - Setiap akun pengguna memiliki stok barang, mutasi transaksi, pesanan, dan ringkasan dashboard masing-masing.
+  - Barang milik User A (misal: admin) tidak akan terlihat atau bercampur dengan barang milik User B (misal: kasir).
+  - Tab "Daftar Akun Baru" (Register) untuk membuat akun dan toko mandiri langsung dari frontend.
+  - Input username dan password (dengan toggle visibilitas password).
+  - Tombol akses cepat akun demo bawaan (admin / admin123, kasir / kasir123).
+  - Verifikasi password terenkripsi dengan scrypt hash serta fallback plaintext untuk seed SQL.
+  - Kartu profil pengguna pada sidebar dan tombol logout di sidebar serta header.
+  - Penyimpanan sesi pengguna pada localStorage.
+
 - Peringatan Stok Minimum
   Barang yang stoknya sama dengan atau di bawah stok minimum ditampilkan sebagai
   barang yang perlu diperhatikan, dilengkapi informasi harga beli dan harga jual.
@@ -71,15 +82,20 @@ Database:
 - Tabel tabel_barang (kolom tambahan: harga_beli NUMERIC, harga_jual NUMERIC)
 - Tabel tabel_transaksi (kolom tambahan: harga_beli NUMERIC, harga_jual NUMERIC)
 - Tabel tabel_pesanan
+- Tabel tabel_pengguna (kolom: id_pengguna, username, password, nama_lengkap, role, created_at)
 - Function catat_transaksi_stok untuk memproses mutasi stok atomik, proteksi stok minus, dan pencatatan harga transaksi/master
 
 Struktur aplikasi:
 - apps/web: frontend React
 - apps/api: backend Express
-- supabase.sql: struktur tabel, relasi, migration alter table, dan stored procedure database
+- supabase.sql: struktur tabel, relasi, migration alter table, tabel pengguna, dan stored procedure database
 
 3. ENDPOINT API YANG DIPAKAI
 
+POST   /api/auth/login
+POST   /api/auth/register
+GET    /api/auth/users
+POST   /api/auth/logout
 GET    /api/dashboard-stats
 GET    /api/barang
 GET    /api/barang/low-stock
@@ -97,7 +113,7 @@ GET    /api/health
 4. CATATAN PENGEMBANGAN
 
 - Kategori barang belum tersedia di form dan database yang sedang dipakai.
-- Login atau autentikasi pengguna belum tersedia.
+- Login dan autentikasi pengguna sudah tersedia via tabel_pengguna Supabase & API /api/auth.
 - Belum ada fitur hapus barang.
 - Belum ada export laporan ke Excel atau PDF.
 - Backend membutuhkan file apps/api/.env agar koneksi Supabase berjalan.

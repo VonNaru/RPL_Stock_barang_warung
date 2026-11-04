@@ -1,14 +1,18 @@
 import express from 'express';
 import cors from 'cors';
+import { authMiddleware } from './middleware/authMiddleware.js';
 import barangRoutes from './routes/barang.js';
 import transaksiRoutes from './routes/transaksi.js';
 import pesananRoutes from './routes/pesanan.js';
 import dashboardRoutes from './routes/dashboard.js';
+import authRoutes from './routes/auth.js';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(authMiddleware);
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
+app.use('/api/auth', authRoutes);
 app.use('/api/barang', barangRoutes);
 app.use('/api/transaksi', transaksiRoutes);
 app.use('/api/pesanan', pesananRoutes);

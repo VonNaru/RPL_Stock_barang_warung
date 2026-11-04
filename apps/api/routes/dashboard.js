@@ -4,11 +4,19 @@ import { calculateDashboardSummary } from '../services/barangService.js';
 
 const router = Router();
 
-router.get('/', async (_req, res, next) => {
+router.get('/', async (req, res, next) => {
   try {
+    let barangQuery = supabase.from('tabel_barang').select('*');
+    let transaksiQuery = supabase.from('tabel_transaksi').select('*');
+
+    if (req.userId) {
+      barangQuery = barangQuery.eq('id_pengguna', req.userId);
+      transaksiQuery = transaksiQuery.eq('id_pengguna', req.userId);
+    }
+
     const [barangRes, transaksiRes] = await Promise.all([
-      supabase.from('tabel_barang').select('*'),
-      supabase.from('tabel_transaksi').select('*')
+      barangQuery,
+      transaksiQuery
     ]);
 
     if (barangRes.error) throw barangRes.error;
