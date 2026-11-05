@@ -1,187 +1,260 @@
-<h1 align="center">Sistem Informasi Manajemen Stok Warung</h1>
+<h1 align="center">Sistem Informasi Manajemen Stok Warung (Multi-Tenant)</h1>
 
-> Aplikasi berbasis web yang dirancang khusus untuk mendigitalisasi proses inventaris pada warung kelontong. Sistem ini memfasilitasi pencatatan arus masuk dan keluarnya barang secara real-time dan memberikan peringatan dini saat stok menipis.
+> Aplikasi web full-stack modern yang dirancang untuk mendigitalisasi proses inventaris warung kelontong dan toko retail. Dilengkapi autentikasi terenkripsi, isolasi data stok per akun pengguna (*multi-tenant*), pencatatan arus modal kulakan dan omzet penjualan, manajemen pesanan (*pre-order*), serta peringatan dini saat stok menipis (*low-stock alert*).
 
 ---
 
-### 📌 Latar Belakang Masalah
+## 📌 Daftar Isi
+- [Latar Belakang & Fitur Utama](#-fitur-utama-sistem)
+- [Arsitektur & Teknologi](#-arsitektur--teknologi)
+- [Panduan Instalasi Fresh Clone Repo](#-panduan-instalasi-fresh-clone-repo)
+- [Konfigurasi Basis Data Supabase](#-konfigurasi-basis-data-supabase)
+- [Konfigurasi Environment Variable (.env)](#-konfigurasi-environment-variable-env)
+- [Akses Akun Demo Bawaan](#-akses-akun-demo-bawaan)
+- [Menjalankan Aplikasi di Lingkungan Lokal](#-menjalankan-aplikasi-di-lingkungan-lokal)
+- [Menjalankan Automated Tests](#-menjalankan-automated-tests)
+- [Kompilasi Build & Panduan Deploy ke Produksi](#-kompilasi-build--panduan-deploy-ke-produksi)
+- [Daftar Endpoint REST API](#-daftar-endpoint-rest-api)
+- [Panduan Pull Request & Kontribusi](#-panduan-pull-request--kontribusi)
 
-Operasional warung kelontong umumnya masih sangat bergantung pada sistem pencatatan manual di buku atau bahkan sekadar ingatan pemiliknya. Seiring dengan bertambahnya variasi barang dan tingginya intensitas transaksi harian, pengelolaan stok secara konvensional ini memunculkan beberapa masalah operasional:
+---
 
-- **Kehabisan Stok yang Tidak Terpantau (Stockout):** Sering kali pemilik warung baru menyadari suatu barang habis tepat ketika pelanggan menanyakannya. Hal ini mengakibatkan hilangnya potensi pendapatan dan menurunkan tingkat kepercayaan pelanggan terhadap kelengkapan warung.
-- **Inefisiensi Proses Pengadaan (Kulakan):** Tanpa adanya data ketersediaan barang yang pasti, proses belanja ke agen menjadi tidak terarah. Pemilik kesulitan menentukan barang mana yang harus diprioritaskan.
-- **Risiko Selisih Barang dan Kehilangan:** Pencatatan manual sangat rentan terhadap *human error*, tercecer, atau rusak. Akibatnya, sangat sulit untuk melakukan audit atau melacak apakah barang berkurang karena terjual, rusak, atau hilang.
-- **Ketiadaan Rekam Jejak Data:** Tidak adanya histori pergerakan barang membuat pemilik kesulitan mengevaluasi tren warungnya secara objektif.
+## 🎯 Fitur Utama Sistem
 
-### 📖 Deskripsi Proyek
+1. **Autentikasi & Multi-Tenant (Stok Terpisah per Akun):**
+   - Halaman login & pendaftaran akun mandiri (*Register*).
+   - Password diamankan dengan hashing berbasis `scrypt` dan *unique salt*.
+   - Setiap pengguna memiliki stok barang, riwayat transaksi, dan laporan finansial sendiri tanpa saling bercampur.
+2. **Dashboard & Ringkasan Finansial Real-time:**
+   - 4 Kartu Statistik: Total Kuantitas Masuk, Total Kuantitas Keluar, Total Pengeluaran Kulakan (Rp), dan Total Omzet Penjualan (Rp).
+   - Indikator barang kritis (*low-stock alert*) saat persediaan menyentuh atau di bawah stok minimum.
+3. **Manajemen Master Barang (Katalog):**
+   - Tambah, edit, dan pantau barang dagangan lengkap dengan harga beli (modal) dan harga jual (omzet).
+   - Penentuan status otomatis: *Aman* atau *Stok rendah*.
+4. **Modul Transaksi Masuk & Keluar:**
+   - **Transaksi Masuk (Restok / Kulakan):** Mencatat kuantitas barang masuk, modal beli, serta pembaruan harga master otomatis.
+   - **Transaksi Keluar (Penjualan / Rusak):** Memotong stok dengan proteksi mutasi minus (`STOK_TIDAK_CUKUP`).
+5. **Manajemen Pesanan Pelanggan (Pre-Order / Booking):**
+   - Mencatat pesanan pelanggan dengan penentuan status otomatis (*Siap Diambil* jika stok cukup, atau *Menunggu Stok* jika belum cukup).
+   - Aksi penyelesaian pesanan (otomatis mengurangi stok fisik) dan pembatalan pesanan.
+6. **Laporan & Riwayat Transaksi Kronologis:**
+   - Log seluruh mutasi barang masuk dan keluar dengan rincian waktu, harga, kuantitas, dan total nominal rupiah untuk kebutuhan *stock opname*.
 
-**Sistem Informasi Manajemen Stok Warung** adalah sebuah aplikasi berbasis web yang dirancang khusus untuk mendigitalisasi proses inventaris pada warung kelontong. Sistem ini memfasilitasi pencatatan arus masuk dan keluarnya barang secara *real-time* ke dalam *database* relasional yang terpusat. 
+---
 
-Fokus utama dari proyek ini adalah memberikan visibilitas penuh kepada *owner* terkait status ketersediaan barang dagangannya. Dengan mengotomatisasi pemantauan stok, sistem secara proaktif menginformasikan barang-barang yang sudah menyentuh batas minimum (*threshold*). Hal ini memungkinkan pemilik untuk segera melakukan pengadaan barang sebelum stok benar-benar kosong di rak. Aplikasi ini dirancang dengan antarmuka yang lugas dan fungsional agar proses pendataan bisa dilakukan dengan cepat.
+## 🛠 Arsitektur & Teknologi
 
-### 🎯 Lingkup Fitur Sistem
-
-- **Dashboard & Low-Stock Alerts:** Halaman beranda yang memberikan ringkasan visual data inventaris. Dilengkapi *widget* indikator yang secara otomatis memunculkan daftar barang yang stoknya berada di bawah ambang batas aman.
-- **Manajemen Master Barang (Katalog):** Modul sentral untuk mengelola daftar barang. Pengguna dapat menambah item baru, mengubah nama, kategori, serta mengatur angka mutlak untuk "stok minimum" dari tiap-tiap barang.
-- **Modul Transaksi In/Out:** Fasilitas input untuk mencatat penambahan stok (saat restok dari agen) dan pengurangan stok (saat barang laku, kedaluwarsa, atau cacat) yang otomatis meng-*update* total stok.
-- **Manajemen Pesanan Pelanggan:** Fasilitas untuk mencatat pesanan berdasarkan nama pelanggan, barang, jumlah, dan catatan. Sistem menentukan status awal pesanan berdasarkan ketersediaan stok, serta menyediakan aksi untuk menyelesaikan atau membatalkan pesanan.
-- **Laporan Riwayat Transaksi:** Tabel log yang merekam seluruh jejak aktivitas keluar-masuknya barang secara kronologis beserta keterangan waktu untuk keperluan pencocokan data (*stock opname*).
-
-## Cara Menjalankan Aplikasi
-
-Ikuti urutan ini dari folder `D:\RPL_Stock_warung`. Jangan langsung menjalankan `npm run dev` sebelum membuat file environment Supabase.
-
-### Langkah 1: Install dependency
-
-Pastikan Node.js 18 atau lebih baru sudah terpasang, kemudian jalankan:
-
-```powershell
-npm install
-```
-
-Perintah ini memasang dependency backend dan frontend dari workspace sekaligus.
-
-### Langkah 2: Siapkan Supabase
-
-1. Buat project di https://supabase.com.
-2. Buka menu **SQL Editor**.
-3. Salin seluruh isi file `supabase.sql` ke SQL Editor dan klik **Run**.
-4. Buka **Project Settings > API** dan siapkan `Project URL` serta `service_role key`.
-
-### Langkah 3: Buat file `.env` backend
-
-Di PowerShell, jalankan:
-
-```powershell
-Copy-Item apps/api/.env.example apps/api/.env
-```
-
-Buka `apps/api/.env`, lalu isi nilainya:
-
-```env
-PORT=3000
-SUPABASE_URL=https://kode-project-anda.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=service-role-key-anda
-```
-
-Jangan membagikan `SUPABASE_SERVICE_ROLE_KEY` dan jangan mengunggah `apps/api/.env` ke GitHub. File tersebut sudah dilindungi oleh `.gitignore`.
-
-### Langkah 4: Jalankan aplikasi
-
-Jalankan frontend dan backend sekaligus dari folder root:
-
-```powershell
-npm run dev
-```
-
-Buka alamat frontend yang tampil di terminal, biasanya http://localhost:5173. Backend berjalan di http://localhost:3000.
-
-Jika sebelumnya muncul error `supabaseUrl is required`, artinya langkah 3 belum dilakukan atau URL di `.env` masih kosong. Setelah mengubah `.env`, hentikan server dengan `Ctrl+C`, lalu jalankan lagi `npm run dev`.
-
-### Menjalankan secara terpisah
-
-```powershell
-npm run dev --workspace apps/api
-npm run dev --workspace apps/web
-```
-
-## Implementasi Aplikasi
-
-Aplikasi tersedia dalam struktur monorepo berikut. Struktur ini memakai folder `apps` yang sudah ada di repository sebagai padanan dari `client` dan `server`:
+Struktur proyek menggunakan **Monorepo (npm workspaces)**:
 
 ```text
 RPL_Stock_warung/
-	apps/
-		api/       # Backend Node.js + Express
-		web/       # Frontend React + Vite + Tailwind CSS
-	supabase.sql
-	package.json
+├── apps/
+│   ├── api/                  # Backend Node.js + Express (Port 3000)
+│   │   ├── middleware/       # Auth & Multi-Tenant Middleware
+│   │   ├── routes/           # REST API Routes (auth, barang, transaksi, pesanan, dashboard)
+│   │   ├── services/         # Business Logic Layer & Validasi
+│   │   ├── server.js         # Entry Point Express Server
+│   │   └── supabase.js       # Inisialisasi Supabase Client
+│   └── web/                  # Frontend React 19 + Vite + Tailwind CSS (Port 5173)
+│       ├── src/
+│       │   ├── components/   # Komponen UI (LoginPage, Dashboard, BarangPage, dll.)
+│       │   ├── utils/        # Helper (formatRupiah)
+│       │   ├── App.jsx       # State & Sesi Pengguna
+│       │   └── main.jsx      # Entry Point React
+├── tests/                    # 8 Test Suites (58 Automated Unit Tests)
+├── supabase.sql              # Skema SQL, tabel multi-tenant, & stored procedure
+├── package.json              # Konfigurasi Monorepo Root
+└── HowToRun.md               # Dokumentasi operasional detail
 ```
 
-### 1. Prasyarat dan instalasi
+- **Frontend:** React 19, Vite 6, Tailwind CSS, Lucide React Icons.
+- **Backend:** Node.js, Express 4, CORS, Dotenv, `@supabase/supabase-js`.
+- **Database:** Supabase PostgreSQL (Stored Procedure PL/pgSQL atomik).
 
-Gunakan Node.js 18 atau lebih baru, lalu jalankan dari folder root:
+---
+
+## 📥 Panduan Instalasi Fresh Clone Repo
+
+Buka terminal di komputer Anda, lalu jalankan:
 
 ```bash
+# 1. Kloning repository dari GitHub
+git clone https://github.com/VonNaru/RPL_Stock_barang_warung.git
+
+# 2. Masuk ke direktori proyek
+cd RPL_Stock_barang_warung
+
+# 3. Pasang seluruh dependensi workspace (root, backend, dan frontend)
 npm install
 ```
 
-Perintah tersebut menjalankan `npm init` secara konseptual melalui `package.json` root dan memasang dependency workspace. Jika membuat proyek dari nol, urutan manualnya adalah:
+---
 
+## 🗄 Konfigurasi Basis Data Supabase
+
+1. Buat proyek baru di [Supabase](https://supabase.com/dashboard).
+2. Buka menu **SQL Editor** pada dashboard Supabase.
+3. Buka file [`supabase.sql`](supabase.sql) pada repositori ini, salin seluruh isinya, tempelkan ke SQL Editor Supabase, lalu klik **Run**.
+4. Skrip tersebut akan otomatis:
+   - Mengaktifkan ekstensi `pgcrypto`.
+   - Membuat tabel `public.tabel_pengguna` (autentikasi pengguna).
+   - Membuat tabel `public.tabel_barang` dengan kolom `id_pengguna`.
+   - Membuat tabel `public.tabel_transaksi` dengan kolom `id_pengguna`.
+   - Membuat tabel `public.tabel_pesanan` dengan kolom `id_pengguna`.
+   - Membuat fungsi stored procedure `public.catat_transaksi_stok(...)`.
+   - Mengisi data demo bawaan untuk akun `admin` dan `kasir`.
+
+---
+
+## 🔐 Konfigurasi Environment Variable (.env)
+
+### 1. Backend (`apps/api/.env`)
+Salin file template `.env.example`:
 ```bash
-npm init -y
-cd apps/api && npm install express cors dotenv @supabase/supabase-js
-cd ../web && npm install react react-dom lucide-react
-npm install -D vite @vitejs/plugin-react tailwindcss postcss autoprefixer
+# Windows PowerShell
+Copy-Item apps/api/.env.example apps/api/.env
+
+# Linux / macOS / Bash
+cp apps/api/.env.example apps/api/.env
 ```
 
-### 2. Supabase
-
-1. Buat project baru di Supabase.
-2. Buka **SQL Editor**, salin seluruh isi `supabase.sql`, lalu jalankan query.
-3. Salin `apps/api/.env.example` menjadi `apps/api/.env`.
-4. Isi `SUPABASE_URL` dan `SUPABASE_SERVICE_ROLE_KEY` dari menu **Project Settings > API**. Service role key hanya digunakan backend dan jangan dimasukkan ke frontend.
-
-Query membuat tabel `tabel_barang`, `tabel_transaksi`, dan `tabel_pesanan`, constraint foreign key, serta function `catat_transaksi_stok`. Function tersebut mengunci update stok secara aman dan menolak transaksi keluar jika stok tidak mencukupi. Tabel pesanan menyimpan status `Menunggu Stok`, `Siap Diambil`, `Selesai`, atau `Dibatalkan`.
-
-### 3. Menjalankan aplikasi
-
-Jalankan frontend dan backend sekaligus dari root:
-
-```bash
-npm run dev
+Buka `apps/api/.env` dan isi kredensial dari Supabase (**Project Settings > API**):
+```env
+PORT=3000
+SUPABASE_URL=https://id-project-anda.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=eyJh......service-role-key-anda......
 ```
 
-Atau jalankan terpisah:
+> ⚠️ **Catatan Keamanan:** Gunakan `service_role key` untuk backend agar dapat menjalankan stored procedure. Jangan pernah membagikan atau meng-*commit* file `.env` ke Git!
 
-```bash
-npm run dev --workspace apps/api    # http://localhost:3000
-npm run dev --workspace apps/web   # alamat Vite, biasanya http://localhost:5173
-```
-
-Jika API berjalan di alamat selain default, buat `apps/web/.env`:
-
+### 2. Frontend (Opsional - `apps/web/.env`)
+Secara *default*, frontend memanggil API di `http://localhost:3000/api`. Jika backend berjalan di alamat/port berbeda (misal saat deploy):
 ```env
 VITE_API_URL=http://localhost:3000/api
 ```
 
-### 4. Endpoint API
+---
 
-| Method | Endpoint | Kegunaan |
-| --- | --- | --- |
-| GET | `/api/barang` | Mengambil seluruh barang |
-| GET | `/api/barang/low-stock` | Mengambil barang dengan stok di bawah minimum |
-| POST | `/api/barang` | Menambah barang |
-| PUT | `/api/barang/:id` | Mengubah barang dan batas minimum |
-| GET | `/api/transaksi` | Mengambil riwayat transaksi |
-| POST | `/api/transaksi` | Mencatat transaksi `masuk` atau `keluar` |
-| GET | `/api/pesanan` | Mengambil seluruh pesanan |
-| GET | `/api/pesanan/menunggu-stok` | Mengambil pesanan yang masih menunggu stok |
-| POST | `/api/pesanan` | Mencatat pesanan pelanggan |
-| POST | `/api/pesanan/:id/selesaikan` | Menyelesaikan pesanan dan mengurangi stok |
-| POST | `/api/pesanan/:id/batalkan` | Membatalkan pesanan |
+## 👥 Akses Akun Demo Bawaan
 
-Contoh body untuk transaksi:
+Aplikasi menyediakan akun bawaan dengan katalog stok yang sudah terpisah (*multi-tenant*):
 
-```json
-{
-	"id_barang": "uuid-barang",
-	"jenis_transaksi": "keluar",
-	"jumlah": 2
-}
+| Akun | Username | Password | Peran | Katalog Awal Bawaan |
+| :--- | :--- | :--- | :--- | :--- |
+| **Admin** | `admin` | `admin123` | Administrator | Beras Maknyuss 5kg, Minyak Bimoli 2L, Gula Gulaku 1kg |
+| **Kasir** | `kasir` | `kasir123` | Kasir | Indomie Goreng Dus, Kopi Kapal Api Dus, Teh Sariwangi |
+
+> 💡 **Buat Akun Mandiri:** Anda juga dapat mengklik tab **"Daftar Akun Baru"** pada halaman login untuk membuat toko baru Anda sendiri.
+
+---
+
+## 🚀 Menjalankan Aplikasi di Lingkungan Lokal
+
+### Opsi A: Menjalankan Sekaligus (Rekomendasi)
+```bash
+npm run dev
+```
+- **Backend API:** Berjalan di `http://localhost:3000`
+- **Frontend Web:** Berjalan di `http://localhost:5173`
+
+Buka browser dan akses: 👉 **[http://localhost:5173](http://localhost:5173)**
+
+### Opsi B: Menjalankan Secara Terpisah
+```bash
+# Terminal 1: Backend
+npm run dev --workspace apps/api
+
+# Terminal 2: Frontend
+npm run dev --workspace apps/web
 ```
 
-### 5. Fitur frontend
+---
 
-- **Ringkasan:** widget peringatan stok rendah dari `/api/barang/low-stock` dan statistik inventaris.
-- **Master Barang:** tabel barang serta modal tambah/edit nama, stok, dan stok minimum.
-- **Transaksi In / Out:** dropdown barang, jenis transaksi, dan jumlah.
-- **Pesanan:** mencatat pesanan pelanggan, melihat status ketersediaan pesanan, menyelesaikan pesanan ketika stok tersedia, dan membatalkan pesanan.
-- **Riwayat Transaksi:** daftar transaksi dari yang terbaru dengan nama barang, jenis, jumlah, dan waktu.
+## 🧪 Menjalankan Automated Tests
 
-### Perintah pemeriksaan
+Seluruh logika bisnis inventaris, proteksi mutasi stok, kalkulasi omzet, autentikasi scrypt, dan isolasi multi-tenant diuji secara otomatis:
 
 ```bash
-node --check apps/api/server.js
-npm run build --workspace apps/web
+npm test
 ```
+
+### Hasil Test Suite (58 Pengujian Lulus):
+1. `tests/1_master_barang.test.js` — Validasi katalog master barang & normalisasi input.
+2. `tests/2_low_stock_dashboard.test.js` — Peringatan stok kritis & kalkulasi ringkasan.
+3. `tests/3_transaksi_masuk.test.js` — Penambahan stok masuk (restok/kulakan).
+4. `tests/4_transaksi_keluar.test.js` — Pengurangan stok (penjualan) & proteksi stok minus.
+5. `tests/5_pesanan_pelanggan.test.js` — Otomasi status pre-order, penyelesaian, & pembatalan.
+6. `tests/6_harga_omzet.test.js` — Kalkulasi modal kulakan, omzet penjualan, & laba kotor.
+7. `tests/7_auth_login.test.js` — Hashing password `scrypt`, verifikasi login, & registrasi.
+8. `tests/8_multi_tenant_isolation.test.js` — Middleware autentikasi & pemisahan stok antar akun.
+
+---
+
+## 📦 Kompilasi Build & Panduan Deploy ke Produksi
+
+### 1. Kompilasi Build Frontend
+```bash
+npm run build
+```
+Hasil build teroptimasi berupa HTML, CSS, dan JS minified akan dibuat di folder `apps/web/dist/`.
+
+### 2. Panduan Deploy Backend (Railway / Render / VPS)
+1. Hubungkan repository GitHub ke layanan hosting (misal: [Railway](https://railway.app) atau [Render](https://render.com)).
+2. Tentukan *Root Directory*: `apps/api`.
+3. Tentukan *Build Command*: `npm install`.
+4. Tentukan *Start Command*: `node server.js`.
+5. Masukkan Environment Variables di dashboard hosting:
+   - `PORT=3000`
+   - `SUPABASE_URL=...`
+   - `SUPABASE_SERVICE_ROLE_KEY=...`
+
+### 3. Panduan Deploy Frontend (Vercel / Netlify / Cloudflare Pages)
+1. Hubungkan repository ke [Vercel](https://vercel.com) atau [Netlify](https://netlify.com).
+2. Tentukan *Root Directory*: `apps/web`.
+3. Tentukan *Build Command*: `npm run build` (atau `vite build`).
+4. Tentukan *Output Directory*: `dist`.
+5. Masukkan Environment Variable:
+   - `VITE_API_URL=https://api-warung-anda.up.railway.app/api` (arahkan ke URL backend produksi Anda).
+
+---
+
+## 📡 Daftar Endpoint REST API
+
+| Method | Endpoint | Keterangan | Header Wajib |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/health` | Pemeriksaan kesehatan server | - |
+| `POST` | `/api/auth/login` | Autentikasi username & password | - |
+| `POST` | `/api/auth/register` | Mendaftarkan akun toko/pengguna baru | - |
+| `POST` | `/api/auth/logout` | Keluar dari sistem | - |
+| `GET` | `/api/dashboard-stats` | Ringkasan finansial & statistik stok | `Authorization` / `x-user-id` |
+| `GET` | `/api/barang` | Mengambil seluruh katalog barang milik akun | `Authorization` / `x-user-id` |
+| `GET` | `/api/barang/low-stock` | Mengambil daftar barang yang stoknya menipis | `Authorization` / `x-user-id` |
+| `POST` | `/api/barang` | Menambah barang baru ke katalog akun | `Authorization` / `x-user-id` |
+| `PUT` | `/api/barang/:id` | Mengubah informasi barang milik akun | `Authorization` / `x-user-id` |
+| `GET` | `/api/transaksi` | Riwayat transaksi keluar-masuk akun | `Authorization` / `x-user-id` |
+| `POST` | `/api/transaksi` | Mencatat transaksi masuk/keluar | `Authorization` / `x-user-id` |
+| `GET` | `/api/pesanan` | Mengambil daftar pesanan pelanggan | `Authorization` / `x-user-id` |
+| `GET` | `/api/pesanan/menunggu-stok` | Mengambil pesanan yang tertunda stok | `Authorization` / `x-user-id` |
+| `POST` | `/api/pesanan` | Membuat pesanan pelanggan baru | `Authorization` / `x-user-id` |
+| `POST` | `/api/pesanan/:id/selesaikan` | Menyelesaikan pesanan & potong stok | `Authorization` / `x-user-id` |
+| `POST` | `/api/pesanan/:id/batalkan` | Membatalkan pesanan | `Authorization` / `x-user-id` |
+
+---
+
+## 🤝 Panduan Pull Request & Kontribusi
+
+Sebelum mengajukan *Pull Request* (PR) ke branch `main`:
+1. Buat branch baru dari `main`:
+   ```bash
+   git checkout -b feature/nama-fitur
+   ```
+2. Pastikan seluruh 58 unit test lulus tanpa error:
+   ```bash
+   npm test
+   ```
+3. Pastikan build frontend berhasil dikompilasi:
+   ```bash
+   npm run build
+   ```
+4. Pastikan tidak ada file rahasia (`.env`) yang terbawa pada `git status`.
+5. Buka Pull Request di GitHub dan sertakan deskripsi perubahan yang jelas.
