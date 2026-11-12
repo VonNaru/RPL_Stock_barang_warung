@@ -8,6 +8,15 @@ import dashboardRoutes from './routes/dashboard.js';
 import authRoutes from './routes/auth.js';
 
 const app = express();
+
+// Export the Express app for Netlify Functions
+export default app;
+
+// Start the server only when this file is executed directly (local dev)
+if (process.argv[1] === import.meta.url) {
+  const port = process.env.PORT || 3000;
+  app.listen(port, () => console.log(`API berjalan di http://localhost:${port}`));
+}
 app.use(cors());
 app.use(express.json());
 app.use(authMiddleware);
