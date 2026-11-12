@@ -124,6 +124,12 @@ Buka file `apps/api/.env` dan sesuaikan nilainya:
 PORT=3000
 SUPABASE_URL=https://id-project-anda.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=eyJh......service-role-key-anda......
+
+# Kredensial Akun Default (dapat diubah sesuai kebutuhan)
+DEFAULT_ADMIN_USERNAME=admin
+DEFAULT_ADMIN_PASSWORD=admin123
+DEFAULT_KASIR_USERNAME=kasir
+DEFAULT_KASIR_PASSWORD=kasir123
 ```
 
 > ⚠️ **PENTING:** Jangan pernah mengunggah file `.env` atau membagikan `SUPABASE_SERVICE_ROLE_KEY` ke repository publik. File `.env` sudah masuk ke dalam `.gitignore`.

@@ -123,6 +123,12 @@ Buka `apps/api/.env` dan isi kredensial dari Supabase (**Project Settings > API*
 PORT=3000
 SUPABASE_URL=https://id-project-anda.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=eyJh......service-role-key-anda......
+
+# Kredensial Akun Bawaan (dapat diubah sesuai kebutuhan)
+DEFAULT_ADMIN_USERNAME=admin
+DEFAULT_ADMIN_PASSWORD=admin123
+DEFAULT_KASIR_USERNAME=kasir
+DEFAULT_KASIR_PASSWORD=kasir123
 ```
 
 > ⚠️ **Catatan Keamanan:** Gunakan `service_role key` untuk backend agar dapat menjalankan stored procedure. Jangan pernah membagikan atau meng-*commit* file `.env` ke Git!

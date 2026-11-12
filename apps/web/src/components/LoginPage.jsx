@@ -9,7 +9,6 @@ import {
   UserPlus,
   AlertCircle,
   Store,
-  CheckCircle2,
 } from "lucide-react";
 
 export default function LoginPage({
@@ -55,13 +54,6 @@ export default function LoginPage({
         role: regRole,
       });
     }
-  };
-
-  const fillDemoAccount = (demoUser, demoPass) => {
-    switchMode("login");
-    setUsername(demoUser);
-    setPassword(demoPass);
-    if (onClearError) onClearError();
   };
 
   return (
@@ -307,31 +299,6 @@ export default function LoginPage({
               </button>
             </form>
           )}
-
-          {/* Quick Demo Credentials */}
-          <div className="mt-8 border-t border-slate-100 pt-5">
-            <p className="mb-2 text-center text-xs font-semibold text-slate-400">
-              Gunakan Akun Bawaan (Klik Cepat):
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => fillDemoAccount("admin", "admin123")}
-                className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs font-semibold text-slate-700 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800"
-              >
-                <span className="block font-bold">Admin (Toko 1)</span>
-                <span className="text-[11px] text-slate-500">admin123</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemoAccount("kasir", "kasir123")}
-                className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs font-semibold text-slate-700 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800"
-              >
-                <span className="block font-bold">Kasir (Toko 2)</span>
-                <span className="text-[11px] text-slate-500">kasir123</span>
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Footer info */}

@@ -27,7 +27,7 @@ router.post('/login', async (req, res, next) => {
       });
     }
 
-    const { data: user, error } = await supabase
+    let { data: user, error } = await supabase
       .from('tabel_pengguna')
       .select('*')
       .ilike('username', validation.sanitized.username)
@@ -35,17 +35,80 @@ router.post('/login', async (req, res, next) => {
 
     if (error) throw error;
 
+    const envAdminUser = (process.env.DEFAULT_ADMIN_USERNAME || 'admin').toLowerCase();
+    const envKasirUser = (process.env.DEFAULT_KASIR_USERNAME || 'kasir').toLowerCase();
+    const envAdminPass = process.env.DEFAULT_ADMIN_PASSWORD;
+    const envKasirPass = process.env.DEFAULT_KASIR_PASSWORD;
+
+    // Jika akun bawaan belum ada di database, buat otomatis dari kredensial .env
     if (!user) {
-      return res.status(401).json({ message: 'Username atau password salah.' });
+      if (
+        validation.sanitized.username === envAdminUser &&
+        envAdminPass &&
+        validation.sanitized.password === envAdminPass
+      ) {
+        const { data: newUser } = await supabase
+          .from('tabel_pengguna')
+          .insert({
+            username: envAdminUser,
+            password: hashPassword(envAdminPass),
+            nama_lengkap: 'Administrator Warung',
+            role: 'admin'
+          })
+          .select('*')
+          .single();
+        if (newUser) user = newUser;
+      } else if (
+        validation.sanitized.username === envKasirUser &&
+        envKasirPass &&
+        validation.sanitized.password === envKasirPass
+      ) {
+        const { data: newUser } = await supabase
+          .from('tabel_pengguna')
+          .insert({
+            username: envKasirUser,
+            password: hashPassword(envKasirPass),
+            nama_lengkap: 'Kasir Warung',
+            role: 'kasir'
+          })
+          .select('*')
+          .single();
+        if (newUser) user = newUser;
+      }
+
+      if (!user) {
+        return res.status(401).json({ message: 'Username atau password salah.' });
+      }
     }
 
-    const isMatch = verifyPassword(validation.sanitized.password, user.password);
+    let isMatch = verifyPassword(validation.sanitized.password, user.password);
+    let matchedViaEnv = false;
+
+    // Sinkronisasi jika password akun bawaan diubah di file .env
+    if (!isMatch) {
+      if (
+        validation.sanitized.username === envAdminUser &&
+        envAdminPass &&
+        validation.sanitized.password === envAdminPass
+      ) {
+        isMatch = true;
+        matchedViaEnv = true;
+      } else if (
+        validation.sanitized.username === envKasirUser &&
+        envKasirPass &&
+        validation.sanitized.password === envKasirPass
+      ) {
+        isMatch = true;
+        matchedViaEnv = true;
+      }
+    }
+
     if (!isMatch) {
       return res.status(401).json({ message: 'Username atau password salah.' });
     }
 
-    // Jika password di database masih plain text (dari seed SQL / manual), otomatis upgrade ke scrypt hash
-    if (!user.password.startsWith('scrypt:')) {
+    // Jika password di database masih plain text atau baru diperbarui via .env, otomatis update hash scrypt
+    if (!user.password.startsWith('scrypt:') || matchedViaEnv) {
       const newHash = hashPassword(validation.sanitized.password);
       supabase
         .from('tabel_pengguna')
