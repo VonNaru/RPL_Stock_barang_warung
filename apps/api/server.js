@@ -19,6 +19,7 @@ app.use(express.json());
 
 // 1. Rute Publik (Bebas akses)
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
+console.log('authRoutes type:', typeof authRoutes, authRoutes && typeof authRoutes === 'object' ? Object.keys(authRoutes):'');
 app.use('/api/auth', fixRoute(authRoutes));
 
 // 2. Pasang Middleware (Satpam)
