@@ -35,11 +35,5 @@ app.use((error, _req, res, _next) => {
   });
 });
 
-// ----- Development server (run locally) -----
-if (process.argv[1] === import.meta.url) {
-  const port = process.env.PORT || 3000;
-  app.listen(port, () => console.log(`API berjalan di http://localhost:${port}`));
-}
-
 // Export the fully‑configured Express app for Netlify Functions
 export default app;
