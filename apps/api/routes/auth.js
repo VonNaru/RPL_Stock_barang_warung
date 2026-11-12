@@ -219,5 +219,4 @@ router.post('/logout', (_req, res) => {
   res.json({ message: 'Logout berhasil.' });
 });
 
-export default router;
 
