@@ -9,22 +9,26 @@ import authRoutes from './routes/auth.js';
 
 const app = express();
 
+// ----- HELPER PENYELAMAT NETLIFY -----
+// Mengekstrak router secara otomatis jika dibungkus menjadi Object oleh Netlify
+const fixRoute = (route) => (route && typeof route === 'object' && route.default) ? route.default : route;
+
 // ----- Middleware & routes -----
 app.use(cors());
 app.use(express.json());
 
-// 1. Public routes (no token needed)
+// 1. Rute Publik (Bebas akses)
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', fixRoute(authRoutes));
 
-// 2. Auth middleware (satpam)
+// 2. Pasang Middleware (Satpam)
 app.use(authMiddleware);
 
-// 3. Private routes (require valid token)
-app.use('/api/barang', barangRoutes);
-app.use('/api/transaksi', transaksiRoutes);
-app.use('/api/pesanan', pesananRoutes);
-app.use('/api/dashboard-stats', dashboardRoutes);
+// 3. Rute Privat (Wajib Token)
+app.use('/api/barang', fixRoute(barangRoutes));
+app.use('/api/transaksi', fixRoute(transaksiRoutes));
+app.use('/api/pesanan', fixRoute(pesananRoutes));
+app.use('/api/dashboard-stats', fixRoute(dashboardRoutes));
 
 // ----- Error handling -----
 app.use((error, _req, res, _next) => {
@@ -35,5 +39,12 @@ app.use((error, _req, res, _next) => {
   });
 });
 
-// Export the fully‑configured Express app for Netlify Functions
+// ----- Development server -----
+// Opsional: Untuk run lokal di komputer lu
+if (process.argv[1] === import.meta.url) {
+  const port = process.env.PORT || 3000;
+  app.listen(port, () => console.log(`API berjalan di http://localhost:${port}`));
+}
+
+// Export the fully-configured Express app for Netlify Functions
 export default app;
