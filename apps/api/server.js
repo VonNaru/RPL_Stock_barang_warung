@@ -17,19 +17,26 @@ const fixRoute = (route) => (route && typeof route === 'object' && route.default
 app.use(cors());
 app.use(express.json());
 
-// 1. Rute Publik (Bebas akses)
-app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
-console.log('authRoutes type:', typeof authRoutes, authRoutes && typeof authRoutes === 'object' ? Object.keys(authRoutes):'');
-app.use('/api/auth', fixRoute(authRoutes));
+// Create a router that will be mounted at both "/api" (local) and "/" (Netlify)
+const apiRouter = express.Router();
 
-// 2. Pasang Middleware (Satpam)
-app.use(authMiddleware);
+// 1. Public routes (no auth middleware)
+apiRouter.get('/health', (_req, res) => res.json({ status: 'ok' }));
+apiRouter.use('/auth', fixRoute(authRoutes));
 
-// 3. Rute Privat (Wajib Token)
-app.use('/api/barang', fixRoute(barangRoutes));
-app.use('/api/transaksi', fixRoute(transaksiRoutes));
-app.use('/api/pesanan', fixRoute(pesananRoutes));
-app.use('/api/dashboard-stats', fixRoute(dashboardRoutes));
+// 2. Auth middleware (protect subsequent routes)
+apiRouter.use(authMiddleware);
+
+// 3. Private routes (require token)
+apiRouter.use('/barang', fixRoute(barangRoutes));
+apiRouter.use('/transaksi', fixRoute(transaksiRoutes));
+apiRouter.use('/pesanan', fixRoute(pesananRoutes));
+apiRouter.use('/dashboard-stats', fixRoute(dashboardRoutes));
+
+// Mount the router for both local development and Netlify entry point
+app.use('/api', apiRouter); // Handles /api/... locally
+app.use('/', apiRouter);    // Handles /... when called via Netlify Functions
+
 
 // ----- Error handling -----
 app.use((error, _req, res, _next) => {
