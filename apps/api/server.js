@@ -9,27 +9,37 @@ import authRoutes from './routes/auth.js';
 
 const app = express();
 
-// Export the Express app for Netlify Functions
-export default app;
-
-// Start the server only when this file is executed directly (local dev)
-if (process.argv[1] === import.meta.url) {
-  const port = process.env.PORT || 3000;
-  app.listen(port, () => console.log(`API berjalan di http://localhost:${port}`));
-}
+// ----- Middleware & routes -----
 app.use(cors());
 app.use(express.json());
-app.use(authMiddleware);
+
+// 1. Public routes (no token needed)
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 app.use('/api/auth', authRoutes);
+
+// 2. Auth middleware (satpam)
+app.use(authMiddleware);
+
+// 3. Private routes (require valid token)
 app.use('/api/barang', barangRoutes);
 app.use('/api/transaksi', transaksiRoutes);
 app.use('/api/pesanan', pesananRoutes);
 app.use('/api/dashboard-stats', dashboardRoutes);
+
+// ----- Error handling -----
 app.use((error, _req, res, _next) => {
   console.error(error);
-  res.status(error.status || 500).json({ message: 'Terjadi kesalahan pada server.', detail: error.message });
+  res.status(error.status || 500).json({
+    message: 'Terjadi kesalahan pada server.',
+    detail: error.message,
+  });
 });
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`API berjalan di http://localhost:${port}`));
+// ----- Development server (run locally) -----
+if (process.argv[1] === import.meta.url) {
+  const port = process.env.PORT || 3000;
+  app.listen(port, () => console.log(`API berjalan di http://localhost:${port}`));
+}
+
+// Export the fully‑configured Express app for Netlify Functions
+export default app;
