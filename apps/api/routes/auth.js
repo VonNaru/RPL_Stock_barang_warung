@@ -127,7 +127,12 @@ router.post('/login', async (req, res, next) => {
       user: safeUser
     });
   } catch (error) {
-    next(error);
+    console.error('Auth Error (register):', error);
+    const status = error.status || 500;
+    res.status(status).json({
+      message: error.message || 'Terjadi kesalahan pada proses registrasi.',
+      detail: error.message,
+    });
   }
 });
 
@@ -189,7 +194,12 @@ router.post('/register', async (req, res, next) => {
       user: data
     });
   } catch (error) {
-    next(error);
+    console.error('Auth Error (register):', error);
+    const status = error.status || 500;
+    res.status(status).json({
+      message: error.message || 'Terjadi kesalahan pada proses registrasi.',
+      detail: error.message,
+    });
   }
 });
 
@@ -207,7 +217,12 @@ router.get('/users', async (_req, res, next) => {
     if (error) throw error;
     res.json(data || []);
   } catch (error) {
-    next(error);
+    console.error('Auth Error (register):', error);
+    const status = error.status || 500;
+    res.status(status).json({
+      message: error.message || 'Terjadi kesalahan pada proses registrasi.',
+      detail: error.message,
+    });
   }
 });
 

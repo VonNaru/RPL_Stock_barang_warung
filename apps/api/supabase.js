@@ -2,31 +2,35 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 
-// ----------   Environment loading (no __dirname)   ----------
-// Netlify Functions run from the project root, so `process.cwd()` points
-// to the root folder of the repository. We first try the .env inside the
-// API folder, then the root .env (if it exists). This works both locally
-// and in the Netlify sandbox.
-const rootDir = process.cwd();
+// supabase.js – initialize Supabase client using Netlify runtime env vars
+// Do NOT rely on local .env files in production – Netlify injects the variables
+// directly into process.env. We keep the dotenv loading for local dev only
+// (it will silently ignore missing files).
+import dotenv from 'dotenv';
+import path from 'path';
+import { createClient } from '@supabase/supabase-js';
 
+// Load .env files only when they exist (local development)
+const rootDir = process.cwd();
 dotenv.config({ path: path.resolve(rootDir, 'apps/api/.env') });
 dotenv.config({ path: path.resolve(rootDir, '.env') });
 
-const hasSupabaseConfig = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY;
-const missingConfigError = () => {
-  const error = new Error('Konfigurasi Supabase belum lengkap. Isi apps/api/.env terlebih dahulu.');
-  error.status = 503;
-  throw error;
-};
+// Required variables – Netlify will provide them at runtime
+const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
 
-if (!hasSupabaseConfig) {
-  console.warn('Supabase belum dikonfigurasi. Pastikan SUPABASE_URL dan SUPABASE_SERVICE_ROLE_KEY sudah diisi di apps/api/.env.');
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  console.error('⚠️ Supabase configuration missing – SUPABASE_URL and/or SUPABASE_SERVICE_ROLE_KEY are not set.');
 }
 
-export const supabase = hasSupabaseConfig
+export const supabase = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
   ? createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      SUPABASE_URL,
+      SUPABASE_SERVICE_ROLE_KEY,
       { auth: { autoRefreshToken: false, persistSession: false } }
     )
-  : { from: missingConfigError, rpc: missingConfigError };
+  : {
+      // Minimal stub that throws a clear error when used in production without config
+      from: () => { throw new Error('Supabase client not initialized – missing URL or Service Role Key.'); },
+      rpc: () => { throw new Error('Supabase client not initialized – missing URL or Service Role Key.'); }
+    };
+
