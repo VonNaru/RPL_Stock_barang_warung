@@ -2,13 +2,6 @@ const { Router } = require('express');
 const { supabase } = require('../supabase.js');
 const { validateLoginInput, validateRegisterInput, hashPassword, verifyPassword, sanitizeUser } = require('../services/authService.js');
 
-import {
-  validateLoginInput,
-  validateRegisterInput,
-  hashPassword,
-  verifyPassword,
-  sanitizeUser
-} from '../services/authService.js';
 
 const router = Router();
 

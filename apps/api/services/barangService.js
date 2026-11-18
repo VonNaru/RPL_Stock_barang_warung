@@ -2,9 +2,9 @@
  * Service untuk aturan bisnis Master Barang dan Status Stok
  */
 
-export const isNonNegativeInteger = (value) => Number.isInteger(value) && value >= 0;
+const isNonNegativeInteger = (value) => Number.isInteger(value) && value >= 0;
 
-export const isNonNegativeNumber = (value) => {
+const isNonNegativeNumber = (value) => {
   if (typeof value === 'number') {
     return !Number.isNaN(value) && value >= 0;
   }
@@ -15,7 +15,7 @@ export const isNonNegativeNumber = (value) => {
   return false;
 };
 
-export const validateBarangInput = ({
+const validateBarangInput = ({
   nama_barang,
   stok_saat_ini = 0,
   stok_minimum = 0,
@@ -45,11 +45,7 @@ export const validateBarangInput = ({
   }
 
   if (errors.length > 0) {
-    return {
-      isValid: false,
-      errors,
-      sanitized: null
-    };
+    return { isValid: false, errors, sanitized: null };
   }
 
   const sanitized = {
@@ -62,31 +58,27 @@ export const validateBarangInput = ({
     sanitized.harga_beli = Number(harga_beli);
   }
 
-  if (harga_jual !== undefined && harga_jual !== null && harga_jual !== '') {
+  if (harga_jual !== undefined && harga_jjual !== null && harga_jual !== '') {
     sanitized.harga_jual = Number(harga_jual);
   }
 
-  return {
-    isValid: true,
-    errors: [],
-    sanitized
-  };
+  return { isValid: true, errors: [], sanitized };
 };
 
-export const checkStockStatus = (stokSaatIni, stokMinimum) => {
+const checkStockStatus = (stokSaatIni, stokMinimum) => {
   if (stokSaatIni <= stokMinimum) {
     return 'Stok rendah';
   }
   return 'Aman';
 };
 
-export const filterLowStock = (barangList = []) => {
+const filterLowStock = (barangList = []) => {
   return barangList
     .filter((barang) => barang.stok_saat_ini <= barang.stok_minimum)
     .sort((a, b) => a.stok_saat_ini - b.stok_saat_ini);
 };
 
-export const calculateDashboardSummary = ({ barangList = [], transaksiList = [] }) => {
+const calculateDashboardSummary = ({ barangList = [], transaksiList = [] }) => {
   const totalBarang = barangList.length;
   const lowStockItems = filterLowStock(barangList);
   const totalBarangLowStock = lowStockItems.length;
@@ -121,4 +113,13 @@ export const calculateDashboardSummary = ({ barangList = [], transaksiList = [] 
     totalOmzetPenjualan,
     isStokAman: totalBarangLowStock === 0
   };
+};
+
+module.exports = {
+  isNonNegativeInteger,
+  isNonNegativeNumber,
+  validateBarangInput,
+  checkStockStatus,
+  filterLowStock,
+  calculateDashboardSummary
 };

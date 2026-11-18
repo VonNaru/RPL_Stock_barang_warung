@@ -2,9 +2,9 @@
  * Service untuk aturan bisnis Manajemen Pesanan Pelanggan (Pre-Order / Booking)
  */
 
-export const isPositiveInteger = (value) => Number.isInteger(value) && value > 0;
+const isPositiveInteger = (value) => Number.isInteger(value) && value > 0;
 
-export const validatePesananInput = ({
+const validatePesananInput = ({
   nama_pelanggan,
   id_barang,
   jumlah_pesanan,
@@ -36,7 +36,7 @@ export const validatePesananInput = ({
   };
 };
 
-export const determineInitialOrderStatus = ({ currentStock, jumlah_pesanan }) => {
+const determineInitialOrderStatus = ({ currentStock, jumlah_pesanan }) => {
   if (!Number.isInteger(currentStock) || currentStock < 0) {
     throw new Error('Data stok barang tidak valid.');
   }
@@ -48,7 +48,7 @@ export const determineInitialOrderStatus = ({ currentStock, jumlah_pesanan }) =>
   return currentStock >= jumlah_pesanan ? 'Siap Diambil' : 'Menunggu Stok';
 };
 
-export const canCompleteOrder = (order, currentStock) => {
+const canCompleteOrder = (order, currentStock) => {
   if (!order) {
     return { canComplete: false, reason: 'Pesanan tidak ditemukan.' };
   }
@@ -70,7 +70,7 @@ export const canCompleteOrder = (order, currentStock) => {
   return { canComplete: true };
 };
 
-export const canCancelOrder = (order) => {
+const canCancelOrder = (order) => {
   if (!order) {
     return { canCancel: false, reason: 'Pesanan tidak ditemukan.' };
   }

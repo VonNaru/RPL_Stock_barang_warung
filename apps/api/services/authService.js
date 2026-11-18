@@ -1,15 +1,15 @@
-import crypto from 'node:crypto';
+const crypto = require('node:crypto');
 
 /**
  * Service untuk aturan bisnis Autentikasi Pengguna & Login
  */
 
-export const ALLOWED_ROLES = ['admin', 'kasir', 'pemilik'];
+const ALLOWED_ROLES = ['admin', 'kasir', 'pemilik'];
 
 /**
  * Validasi input login
  */
-export const validateLoginInput = ({ username, password }) => {
+const validateLoginInput = ({ username, password }) => {
   const errors = [];
 
   if (typeof username !== 'string' || !username.trim()) {
@@ -41,7 +41,7 @@ export const validateLoginInput = ({ username, password }) => {
 /**
  * Validasi input registrasi pengguna baru
  */
-export const validateRegisterInput = ({ username, password, nama_lengkap, role = 'kasir' }) => {
+const validateRegisterInput = ({ username, password, nama_lengkap, role = 'kasir' }) => {
   const errors = [];
 
   if (typeof username !== 'string' || !username.trim()) {
@@ -92,7 +92,7 @@ export const validateRegisterInput = ({ username, password, nama_lengkap, role =
 /**
  * Menghasilkan hash password berbasis scrypt
  */
-export const hashPassword = (password) => {
+const hashPassword = (password) => {
   if (typeof password !== 'string' || !password) {
     throw new Error('Password tidak boleh kosong.');
   }
@@ -104,7 +104,7 @@ export const hashPassword = (password) => {
 /**
  * Memverifikasi kecocokan password dengan hash atau plaintext fallback
  */
-export const verifyPassword = (password, storedPassword) => {
+const verifyPassword = (password, storedPassword) => {
   if (typeof password !== 'string' || typeof storedPassword !== 'string') {
     return false;
   }
@@ -127,9 +127,19 @@ export const verifyPassword = (password, storedPassword) => {
 /**
  * Menghapus data sensitif (password) dari objek pengguna
  */
-export const sanitizeUser = (user) => {
+const sanitizeUser = (user) => {
   if (!user || typeof user !== 'object') return null;
   const { password, ...safeUser } = user;
   return safeUser;
 };
+
+module.exports = {
+  ALLOWED_ROLES,
+  validateLoginInput,
+  validateRegisterInput,
+  hashPassword,
+  verifyPassword,
+  sanitizeUser
+};
+
 

@@ -1,6 +1,6 @@
-import { Router } from 'express';
-import { supabase } from '../supabase.js';
-import { calculateDashboardSummary } from '../services/barangService.js';
+const { Router } = require('express');
+const { supabase } = require('../supabase.js');
+const { calculateDashboardSummary } = require('../services/barangService.js');
 
 const router = Router();
 

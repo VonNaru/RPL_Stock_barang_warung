@@ -1,8 +1,6 @@
 const { Router } = require('express');
 const { supabase } = require('../supabase.js');
 const { filterLowStock, validateBarangInput } = require('../services/barangService.js');
-import { supabase } from '../supabase.js';
-import { filterLowStock, validateBarangInput } from '../services/barangService.js';
 
 const router = Router();
 
