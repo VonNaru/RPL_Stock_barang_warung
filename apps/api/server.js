@@ -20,7 +20,21 @@ function fixRoute(route) {
 app.use(cors());
 app.use(express.json());
 
-// Create a router that will be mounted at both "/api" (local) and "/" (Netlify)
+// Pastikan req.body diparsing dengan benar jika serverless-http mengirimkan Buffer/String
+app.use((req, _res, next) => {
+  if (Buffer.isBuffer(req.body)) {
+    try {
+      req.body = JSON.parse(req.body.toString('utf8'));
+    } catch (e) {}
+  } else if (typeof req.body === 'string' && req.body.trim()) {
+    try {
+      req.body = JSON.parse(req.body);
+    } catch (e) {}
+  }
+  next();
+});
+
+// Create a router that will be mounted at all Netlify and local path variants
 const apiRouter = express.Router();
 
 // 1. Public routes (no auth middleware)
@@ -36,9 +50,10 @@ apiRouter.use('/transaksi', fixRoute(transaksiRoutes));
 apiRouter.use('/pesanan', fixRoute(pesananRoutes));
 apiRouter.use('/dashboard-stats', fixRoute(dashboardRoutes));
 
-// Mount the router for both local development and Netlify entry point
-app.use('/api', apiRouter); // Handles /api/... locally
-app.use('/', apiRouter);    // Handles /... when called via Netlify Functions
+// Mount router untuk semua varian path agar tidak pernah 404 di Netlify
+app.use('/.netlify/functions/api', apiRouter); // Handles /.netlify/functions/api/...
+app.use('/api', apiRouter);                    // Handles /api/...
+app.use('/', apiRouter);                       // Handles /... fallback
 
 // ----- Error handling -----
 app.use((error, _req, res, _next) => {

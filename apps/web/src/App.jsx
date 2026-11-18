@@ -18,7 +18,16 @@ import TransactionPage from "./components/TransactionPage";
 import PesananPage from "./components/PesananPage";
 import LoginPage from "./components/LoginPage";
 
-const API_URL = (import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/+$/, "") + "/api" : "http://localhost:3000/api");
+const getApiUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl) {
+    const cleaned = envUrl.replace(/\/+$/, "");
+    return cleaned.endsWith("/api") ? cleaned : `${cleaned}/api`;
+  }
+  return import.meta.env.DEV ? "http://localhost:3000/api" : "/api";
+};
+
+const API_URL = getApiUrl();
 
 async function request(path, options = {}) {
   const token = localStorage.getItem("warung_token");

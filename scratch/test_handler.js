@@ -1,6 +1,12 @@
 const { handler } = require('../netlify/functions/api.js');
-(async () => {
-  const paths = ['/auth/login', '/api/auth/login'];
+
+async function runTest() {
+  const paths = [
+    '/auth/login',
+    '/api/auth/login',
+    '/.netlify/functions/api/auth/login'
+  ];
+
   for (const p of paths) {
     const event = {
       httpMethod: 'POST',
@@ -11,9 +17,12 @@ const { handler } = require('../netlify/functions/api.js');
     };
     try {
       const result = await handler(event, {});
-      console.log('Path', p, '=>', result.statusCode, result.body);
+      console.log(`[TEST] Path: ${p} => Status: ${result.statusCode}`);
+      console.log(`[TEST] Body: ${result.body.substring(0, 150)}...\n`);
     } catch (e) {
-      console.error('Error for', p, e);
+      console.error(`[TEST] Error on path ${p}:`, e);
     }
   }
-})();
+}
+
+runTest();
