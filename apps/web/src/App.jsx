@@ -18,7 +18,7 @@ import TransactionPage from "./components/TransactionPage";
 import PesananPage from "./components/PesananPage";
 import LoginPage from "./components/LoginPage";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const API_URL = (import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/+$/, "") + "/api" : "http://localhost:3000/api");
 
 async function request(path, options = {}) {
   const token = localStorage.getItem("warung_token");
