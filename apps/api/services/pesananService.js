@@ -85,7 +85,7 @@ const canCancelOrder = (order) => {
   return { canCancel: true };
 };
 
-export const processOrderCompletion = ({ order, currentStock }) => {
+const processOrderCompletion = ({ order, currentStock }) => {
   const check = canCompleteOrder(order, currentStock);
   if (!check.canComplete) {
     const error = new Error(check.reason);
@@ -101,3 +101,5 @@ export const processOrderCompletion = ({ order, currentStock }) => {
     newStock: currentStock - order.jumlah_pesanan
   };
 };
+
+module.exports = { processOrderCompletion };

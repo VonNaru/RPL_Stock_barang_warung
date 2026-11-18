@@ -2,9 +2,9 @@
  * Service untuk aturan bisnis Transaksi Stok (Masuk & Keluar)
  */
 
-export const isPositiveInteger = (value) => Number.isInteger(value) && value > 0;
+const isPositiveInteger = (value) => Number.isInteger(value) && value > 0;
 
-export const isNonNegativeNumber = (value) => {
+const isNonNegativeNumber = (value) => {
   if (typeof value === 'number') {
     return !Number.isNaN(value) && value >= 0;
   }
@@ -15,7 +15,7 @@ export const isNonNegativeNumber = (value) => {
   return false;
 };
 
-export const validateTransaksiInput = ({ id_barang, jenis_transaksi, jumlah, harga_beli, harga_jual }) => {
+const validateTransaksiInput = ({ id_barang, jenis_transaksi, jumlah, harga_beli, harga_jual }) => {
   const errors = [];
 
   if (!id_barang || typeof id_barang !== 'string' || !id_barang.trim()) {
@@ -67,7 +67,7 @@ export const validateTransaksiInput = ({ id_barang, jenis_transaksi, jumlah, har
   };
 };
 
-export const calculateStockMutation = ({ currentStock, jenis_transaksi, jumlah }) => {
+const calculateStockMutation = ({ currentStock, jenis_transaksi, jumlah }) => {
   if (!Number.isInteger(currentStock) || currentStock < 0) {
     throw new Error('Stok saat ini tidak valid.');
   }
