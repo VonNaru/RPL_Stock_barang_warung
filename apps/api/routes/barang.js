@@ -1,4 +1,6 @@
-import { Router } from 'express';
+const { Router } = require('express');
+const { supabase } = require('../supabase.js');
+const { filterLowStock, validateBarangInput } = require('../services/barangService.js');
 import { supabase } from '../supabase.js';
 import { filterLowStock, validateBarangInput } from '../services/barangService.js';
 
@@ -90,4 +92,4 @@ router.put('/:id', async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
-export default router;
+module.exports = router;

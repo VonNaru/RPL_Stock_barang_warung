@@ -1,17 +1,19 @@
-import express from 'express';
-import cors from 'cors';
-import { authMiddleware } from './middleware/authMiddleware.js';
-import barangRoutes from './routes/barang.js';
-import transaksiRoutes from './routes/transaksi.js';
-import pesananRoutes from './routes/pesanan.js';
-import dashboardRoutes from './routes/dashboard.js';
-import authRoutes from './routes/auth.js';
+const express = require('express');
+const cors = require('cors');
+const { authMiddleware } = require('./middleware/authMiddleware.js');
+const barangRoutes = require('./routes/barang.js');
+const transaksiRoutes = require('./routes/transaksi.js');
+const pesananRoutes = require('./routes/pesanan.js');
+const dashboardRoutes = require('./routes/dashboard.js');
+const authRoutes = require('./routes/auth.js');
 
 const app = express();
 
 // ----- HELPER PENYELAMAT NETLIFY -----
-// Mengekstrak router secara otomatis jika dibungkus menjadi Object oleh Netlify
-const fixRoute = (route) => (route && typeof route === 'object' && route.default) ? route.default : route;
+// Extract default export if module wrapped in an object (for compatibility)
+function fixRoute(route) {
+  return route && typeof route === 'object' && 'default' in route ? route.default : route;
+}
 
 // ----- Middleware & routes -----
 app.use(cors());
@@ -37,7 +39,6 @@ apiRouter.use('/dashboard-stats', fixRoute(dashboardRoutes));
 app.use('/api', apiRouter); // Handles /api/... locally
 app.use('/', apiRouter);    // Handles /... when called via Netlify Functions
 
-
 // ----- Error handling -----
 app.use((error, _req, res, _next) => {
   console.error(error);
@@ -48,11 +49,11 @@ app.use((error, _req, res, _next) => {
 });
 
 // ----- Development server -----
-// Opsional: Untuk run lokal di komputer lu
-if (process.argv[1] === import.meta.url) {
+// Optional: run locally when this file is executed directly
+if (require.main === module) {
   const port = process.env.PORT || 3000;
   app.listen(port, () => console.log(`API berjalan di http://localhost:${port}`));
 }
 
 // Export the fully-configured Express app for Netlify Functions
-export default app;
+module.exports = app;

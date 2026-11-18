@@ -1,14 +1,6 @@
-import dotenv from 'dotenv';
-import path from 'path';
-import { createClient } from '@supabase/supabase-js';
-
-// supabase.js – initialize Supabase client using Netlify runtime env vars
-// Do NOT rely on local .env files in production – Netlify injects the variables
-// directly into process.env. We keep the dotenv loading for local dev only
-// (it will silently ignore missing files).
-import dotenv from 'dotenv';
-import path from 'path';
-import { createClient } from '@supabase/supabase-js';
+const dotenv = require('dotenv');
+const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
 
 // Load .env files only when they exist (local development)
 const rootDir = process.cwd();
@@ -22,7 +14,7 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   console.error('⚠️ Supabase configuration missing – SUPABASE_URL and/or SUPABASE_SERVICE_ROLE_KEY are not set.');
 }
 
-export const supabase = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
+const supabase = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
   ? createClient(
       SUPABASE_URL,
       SUPABASE_SERVICE_ROLE_KEY,
@@ -34,3 +26,4 @@ export const supabase = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
       rpc: () => { throw new Error('Supabase client not initialized – missing URL or Service Role Key.'); }
     };
 
+module.exports = { supabase };

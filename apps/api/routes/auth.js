@@ -1,5 +1,7 @@
-import { Router } from 'express';
-import { supabase } from '../supabase.js';
+const { Router } = require('express');
+const { supabase } = require('../supabase.js');
+const { validateLoginInput, validateRegisterInput, hashPassword, verifyPassword, sanitizeUser } = require('../services/authService.js');
+
 import {
   validateLoginInput,
   validateRegisterInput,
@@ -236,4 +238,4 @@ router.post('/logout', (_req, res) => {
 
 
 
-export default router;
+module.exports = router;
