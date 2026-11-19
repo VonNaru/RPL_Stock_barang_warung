@@ -10,11 +10,20 @@ export default function BarangModal({ item, onClose, onSave }) {
     harga_jual: item?.harga_jual ?? 0,
   });
 
-  const update = (key, value) =>
-    setForm({
-      ...form,
-      [key]: key === "nama_barang" ? value : value === "" ? "" : Number(value),
-    });
+  const update = (key, value) => {
+    // Prevent negative numbers for numeric fields
+    if (['stok_saat_ini', 'stok_minimum', 'harga_beli', 'harga_jual'].includes(key)) {
+      const num = Number(value);
+      if (num < 0) return; // ignore negative input
+      setForm({
+        ...form,
+        [key]: key === "nama_barang" ? value : num,
+      });
+    } else {
+      setForm({ ...form, [key]: value });
+    }
+  };
+
 
   const handleSave = () => {
     onSave({

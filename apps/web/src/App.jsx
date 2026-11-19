@@ -30,28 +30,40 @@ const getApiUrl = () => {
 const API_URL = getApiUrl();
 
 async function request(path, options = {}) {
-  const token = localStorage.getItem("warung_token");
-  const savedUser = localStorage.getItem("warung_user");
+  const token = localStorage.getItem('warung_token');
+  const savedUser = localStorage.getItem('warung_user');
   let userId = null;
   try {
     if (savedUser) userId = JSON.parse(savedUser)?.id_pengguna;
   } catch {}
 
-  const headers = { "Content-Type": "application/json", ...options.headers };
+  // Token expiry check – assume token is base64('id:timestamp')
   if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-  if (userId) {
-    headers["x-user-id"] = userId;
+    try {
+      const decoded = atob(token);
+      const [, exp] = decoded.split(':');
+      if (exp && Number(exp) < Date.now()) {
+        // token expired, clear and force logout
+        localStorage.removeItem('warung_token');
+        localStorage.removeItem('warung_user');
+        setUser(null);
+        setNotice({ type: 'error', message: 'Sesi telah berakhir, silakan masuk kembali.' });
+        throw new Error('Token expired');
+      }
+    } catch (e) {
+      // invalid token format – ignore, let server handle auth
+    }
   }
 
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers,
-  });
+  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  if (userId) headers['x-user-id'] = userId;
+
+  const response = await fetch(`${API_URL}${path}`, { ...options, headers });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok)
-    throw new Error(body.message || "Permintaan gagal diproses.");
+  if (!response.ok) {
+    throw new Error(body.message || 'Permintaan gagal diproses.');
+  }
   return body;
 }
 
@@ -123,22 +135,27 @@ export default function App() {
   }, [user]);
 
   const handleLogin = async ({ username, password }) => {
+    // Basic client‑side validation – show error before making request
+    if (!username?.trim() || !password) {
+      setAuthError('Username dan password wajib diisi.');
+      return;
+    }
     setAuthLoading(true);
     setAuthError(null);
     try {
-      const res = await request("/auth/login", {
-        method: "POST",
+      const res = await request('/auth/login', {
+        method: 'POST',
         body: JSON.stringify({ username, password }),
       });
       if (res?.user) {
         setUser(res.user);
-        localStorage.setItem("warung_user", JSON.stringify(res.user));
+        localStorage.setItem('warung_user', JSON.stringify(res.user));
         if (res.token) {
-          localStorage.setItem("warung_token", res.token);
+          localStorage.setItem('warung_token', res.token);
         }
       }
     } catch (err) {
-      setAuthError(err.message || "Gagal masuk. Periksa username dan password.");
+      setAuthError(err.message || 'Gagal masuk. Periksa username dan password.');
     } finally {
       setAuthLoading(false);
     }
@@ -206,6 +223,14 @@ export default function App() {
 
   const saveTransaction = async (event) => {
     event.preventDefault();
+    // Validate stock overflow for outgoing transaction
+    if (transaction.jenis_transaksi === "keluar") {
+      const selected = barang.find((i) => i.id_barang === transaction.id_barang);
+      if (selected && Number(transaction.jumlah) > Number(selected.stok_saat_ini)) {
+        setNotice({ type: "error", message: "Stok tidak mencukupi untuk transaksi keluar." });
+        return;
+      }
+    }
     try {
       const payload = {
         id_barang: transaction.id_barang,

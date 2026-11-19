@@ -5,6 +5,8 @@
 const isNonNegativeInteger = (value) => Number.isInteger(value) && value >= 0;
 
 const isNonNegativeNumber = (value) => {
+  // Fixed typo: ensure harga_jual is correctly referenced later
+
   if (typeof value === 'number') {
     return !Number.isNaN(value) && value >= 0;
   }
@@ -58,7 +60,7 @@ const validateBarangInput = ({
     sanitized.harga_beli = Number(harga_beli);
   }
 
-  if (harga_jual !== undefined && harga_jjual !== null && harga_jual !== '') {
+  if (harga_jual !== undefined && harga_jual !== null && harga_jual !== '') {
     sanitized.harga_jual = Number(harga_jual);
   }
 
@@ -75,7 +77,12 @@ const checkStockStatus = (stokSaatIni, stokMinimum) => {
 const filterLowStock = (barangList = []) => {
   return barangList
     .filter((barang) => barang.stok_saat_ini <= barang.stok_minimum)
-    .sort((a, b) => a.stok_saat_ini - b.stok_saat_ini);
+    .sort((a, b) => {
+      const diff = a.stok_saat_ini - b.stok_saat_ini;
+      if (diff !== 0) return diff;
+      // secondary stable sort by name
+      return (a.nama_barang || '').localeCompare(b.nama_barang || '');
+    });
 };
 
 const calculateDashboardSummary = ({ barangList = [], transaksiList = [] }) => {
